@@ -1,7 +1,10 @@
 package com.jalloro.android.pubcrawler.welcome;
 
+import android.content.Intent;
 import android.location.Location;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.ResultReceiver;
 import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
 import android.util.Log;
@@ -27,6 +30,8 @@ public class WelcomeFragment extends Fragment
     private GoogleApiClient googleApiClient;
     private Location lastLocation;
     LocationRequest locationRequest;
+    private ResultReceiver resultReceiver;
+    private String lastAddress;
 
     public WelcomeFragment() {
     }
@@ -39,8 +44,9 @@ public class WelcomeFragment extends Fragment
         final ImageButton checkInButton = (ImageButton)rootView.findViewById(R.id.checkinButton);
 
         if(PlayServicesHelper.isGooglePlayInstalled(getActivity())){
+            resultReceiver = new AddressResultReceiver(new Handler());
             buildGoogleApiClient();
-            locationRequest = PlayServicesHelper.createLocationRequest(10000, 5000, LocationRequest.PRIORITY_HIGH_ACCURACY);
+            locationRequest = PlayServicesHelper.createLocationRequest(10000, 50000, LocationRequest.PRIORITY_HIGH_ACCURACY);
             googleApiClient.connect();
 
             checkedIn = savedInstanceState != null && Boolean.parseBoolean(savedInstanceState.get(CHECKED_IN).toString());
@@ -51,6 +57,7 @@ public class WelcomeFragment extends Fragment
                 public void onClick(View v) {
                     if(!checkedIn){
                         lastLocation = LocationServices.FusedLocationApi.getLastLocation(googleApiClient);
+                        startIntentService();
                         checkedIn = true;
                         updateChecked(rootView, true);
                     }
@@ -72,7 +79,7 @@ public class WelcomeFragment extends Fragment
 
     @Override
     public void onConnected(Bundle bundle) {
-        PlayServicesHelper.startLocationUpdates(googleApiClient,locationRequest,this);
+        PlayServicesHelper.startLocationUpdates(googleApiClient, locationRequest, this);
     }
 
     @Override
@@ -88,8 +95,9 @@ public class WelcomeFragment extends Fragment
     @Override
     public void onLocationChanged(Location location) {
         lastLocation = location;
-        checkedIn = false;
-        updateChecked(getView(),false);
+        startIntentService();
+       // checkedIn = false;
+       // updateChecked(getView(),false);
     }
 
     @Override
@@ -104,7 +112,7 @@ public class WelcomeFragment extends Fragment
     public void onResume() {
         super.onResume();
         if (googleApiClient != null && googleApiClient.isConnected()) {
-            PlayServicesHelper.startLocationUpdates(googleApiClient,locationRequest, this);
+            PlayServicesHelper.startLocationUpdates(googleApiClient, locationRequest, this);
         }
     }
 
@@ -126,6 +134,40 @@ public class WelcomeFragment extends Fragment
         else {
             checkInText.setText(R.string.checkIn);
             checkInButton.setBackground(view.getResources().getDrawable(R.drawable.checkin_button));
+        }
+    }
+
+    private void startIntentService() {
+        Intent intent = new Intent(getActivity(), FetchAddressIntentService.class);
+        intent.putExtra(FetchAddressIntentService.Constants.RECEIVER, resultReceiver);
+        intent.putExtra(FetchAddressIntentService.Constants.LOCATION_DATA_EXTRA, lastLocation);
+        getActivity().startService(intent);
+    }
+
+
+
+    class AddressResultReceiver extends ResultReceiver {
+        public AddressResultReceiver(Handler handler) {
+            super(handler);
+        }
+
+        @Override
+        public void onReceiveResult(int resultCode, Bundle resultData) {
+
+            // Display the address string
+            // or an error message sent from the intent service.
+            String addressOutput = resultData.getString(FetchAddressIntentService.Constants.RESULT_DATA_KEY);
+
+            // Show a toast message if an address was found.
+            if (resultCode == FetchAddressIntentService.Constants.SUCCESS_RESULT) {
+                //showToast(getString(R.string.address_found));
+                if(!addressOutput.equals(lastAddress)){
+                    checkedIn = false;
+                    updateChecked(getView(),false);
+                    lastAddress = addressOutput;
+                }
+            }
+
         }
     }
 

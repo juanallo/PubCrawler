@@ -5,4 +5,8 @@
     <string name="checkIn">check-in</string>
     <string name="brand_name">Pub \nCrawler</string>
     <string name="checked_in">checked In!</string>
+    <string name="service_not_available">The location Service is not available, try again later</string>
+    <string name="invalid_lat_long_used">The longitude is invalid</string>
+    <string name="no_address_found">No address was found in that location</string>
+    <string name="address_found">address found in location</string>
 </resources>
