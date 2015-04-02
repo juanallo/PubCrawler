@@ -52,7 +52,7 @@ public class FetchAddressIntentService extends IntentService {
             errorMessage = getString(R.string.service_not_available);
             Log.e(LOG_CAT, errorMessage, ioException);
             //trying to call google maps api directly
-            final String currentLocationViaJSON = PlayServicesHelper.getCurrentLocationViaJSON(location.getAltitude(), location.getLongitude());
+            final String currentLocationViaJSON = PlayServicesHelper.getCurrentLocationViaJSON(location.getLatitude(), location.getLongitude());
             if(currentLocationViaJSON != null){
                 Log.d(LOG_CAT, getString(R.string.address_found));
                 deliverResultToReceiver(Constants.SUCCESS_RESULT,currentLocationViaJSON);

@@ -2,6 +2,12 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.jalloro.android.pubcrawler" >
 
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_LOCATION_EXTRA_COMMANDS" />
+    <uses-permission android:name="com.google.android.providers.gsf.permission.READ_GSERVICES"/>
+
     <application
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
@@ -9,8 +15,9 @@
         android:theme="@style/AppTheme" >
         <activity
             android:name=".welcome.welcomeActivity"
-            android:screenOrientation="portrait"
-            android:label="@string/app_name" >
+            android:label="@string/app_name"
+            android:theme="@style/noBarTheme"
+            android:screenOrientation="portrait" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -18,16 +25,18 @@
             </intent-filter>
         </activity>
 
-        <meta-data android:name="com.google.android.gms.version"
+        <activity android:name=".detail.PubDetailActivity"
+            android:parentActivityName=".welcome.welcomeActivity"
+            android:label="@string/pub_details" />
+
+        <meta-data
+            android:name="com.google.android.gms.version"
             android:value="@integer/google_play_services_version" />
 
         <service
             android:name=".welcome.FetchAddressIntentService"
-            android:exported="false"/>
+            android:exported="false" />
+
     </application>
 
-    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
-    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
-    <uses-permission android:name="android.permission.INTERNET" />
-    <uses-permission android:name="android.permission.ACCESS_LOCATION_EXTRA_COMMANDS"/>
 </manifest>

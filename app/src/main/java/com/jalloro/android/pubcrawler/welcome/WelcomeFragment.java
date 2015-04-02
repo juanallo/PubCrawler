@@ -20,6 +20,7 @@ import com.google.android.gms.location.LocationListener;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
 import com.jalloro.android.pubcrawler.R;
+import com.jalloro.android.pubcrawler.detail.PubDetailActivity;
 import com.jalloro.android.pubcrawler.helpers.PlayServicesHelper;
 
 public class WelcomeFragment extends Fragment
@@ -60,6 +61,18 @@ public class WelcomeFragment extends Fragment
                         startIntentService();
                         checkedIn = true;
                         updateChecked(rootView, true);
+
+                        Handler handler = new Handler();
+                        handler.postDelayed(new Runnable() {
+                            @Override
+                            public void run() {
+                                Intent intent = new Intent(getActivity(), PubDetailActivity.class);
+                                intent.putExtra(PUB_ADDRESS, lastAddress);
+                                startActivity(intent);
+                            }
+                        }, DETAIL_DELAY);
+
+
                     }
                 }
             });
@@ -173,5 +186,7 @@ public class WelcomeFragment extends Fragment
 
     private final static String LOG_CAT = WelcomeFragment.class.getName();
     private static final String CHECKED_IN = "CHECKED_IN";
+    public static final String PUB_ADDRESS = "PUB_ADDRESS";
+    private static final int DETAIL_DELAY = 2000;
 
 }

@@ -105,7 +105,6 @@ public class PlayServicesHelper {
             if(status.equalsIgnoreCase("OK")){
                 JSONArray results = jsonObj.getJSONArray("results");
                 int i = 0;
-                Log.i("i", i+ "," + results.length() ); //TODO delete this
                 do{
 
                     JSONObject r = results.getJSONObject(i);
