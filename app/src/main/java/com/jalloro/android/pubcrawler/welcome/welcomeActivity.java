@@ -1,18 +1,14 @@
-package com.jalloro.android.pubcrawler;
+package com.jalloro.android.pubcrawler.welcome;
 
-import android.support.v7.app.ActionBarActivity;
-import android.support.v7.app.ActionBar;
-import android.support.v4.app.Fragment;
 import android.os.Bundle;
-import android.view.LayoutInflater;
+import android.support.v7.app.ActionBarActivity;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.View;
-import android.view.ViewGroup;
-import android.os.Build;
+
+import com.jalloro.android.pubcrawler.R;
 
 
-public class welcome_checkin extends ActionBarActivity {
+public class welcomeActivity extends ActionBarActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -20,7 +16,7 @@ public class welcome_checkin extends ActionBarActivity {
         setContentView(R.layout.activity_welcome_checkin);
         if (savedInstanceState == null) {
             getSupportFragmentManager().beginTransaction()
-                    .add(R.id.container, new PlaceholderFragment())
+                    .add(R.id.container, new WelcomeFragment())
                     .commit();
         }
     }
@@ -48,19 +44,5 @@ public class welcome_checkin extends ActionBarActivity {
         return super.onOptionsItemSelected(item);
     }
 
-    /**
-     * A placeholder fragment containing a simple view.
-     */
-    public static class PlaceholderFragment extends Fragment {
 
-        public PlaceholderFragment() {
-        }
-
-        @Override
-        public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                                 Bundle savedInstanceState) {
-            View rootView = inflater.inflate(R.layout.fragment_welcome_checkin, container, false);
-            return rootView;
-        }
-    }
 }

@@ -2,4 +2,7 @@
     <string name="app_name">PubCrawler</string>
     <string name="hello_world">Hello world!</string>
     <string name="action_settings">Settings</string>
+    <string name="checkIn">check-in</string>
+    <string name="brand_name">Pub \nCrawler</string>
+    <string name="checked_in">checked In!</string>
 </resources>
