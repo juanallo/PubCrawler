@@ -12,6 +12,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.TextView;
 
@@ -24,6 +25,7 @@ import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.LocationListener;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
+import com.jalloro.android.pubcrawler.near.whatIsHotActivity;
 import com.jalloro.android.pubcrawler.R;
 import com.jalloro.android.pubcrawler.detail.PubDetailActivity;
 import com.jalloro.android.pubcrawler.detail.PubDetailFragment;
@@ -76,7 +78,6 @@ public class WelcomeFragment extends Fragment
             userInfo.addListenerForSingleValueEvent(new ValueEventListener(){
                 @Override
                 public void onDataChange(DataSnapshot dataSnapshot) {
-//                    private SimplifiedLocation lastLocation;
                     if(dataSnapshot.getValue()!= null){
                         Map<String, Object> crawlerInfo = (Map<String, Object>) dataSnapshot.getValue();
                         currentCrawler.setLastAddress((String)crawlerInfo.get("lastAddress"));
@@ -141,6 +142,17 @@ public class WelcomeFragment extends Fragment
                 @Override
                 public void onClick(View v) {
                     openDetails();
+                }
+            });
+
+            Button whatIsHot = (Button) rootView.findViewById(R.id.what_is_hot);
+            whatIsHot.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    Intent intent = new Intent(getActivity(), whatIsHotActivity.class);
+                    //current and pub location are the same
+                    intent.putExtra(PubDetailFragment.CURRENT_LOCATION, currentCrawler.getLastLocation());
+                    startActivity(intent);
                 }
             });
         }
@@ -255,7 +267,7 @@ public class WelcomeFragment extends Fragment
 
 //    public void createTestUsers(){
 //        final Firebase firebase = new Firebase("https://boiling-fire-4188.firebaseio.com/crawlers");
-//        String address = "760 Mission Court \nFremont, California 94539";
+//        String address = "760 Mission Court\nFremont, California 94539";
 //        Map<String, Crawler> crawlers = new HashMap<String, Crawler>();
 //        crawlers.put(currentCrawler.getUserId(), currentCrawler);
 //        for(int i = 0 ; i <100; i++){
@@ -263,13 +275,13 @@ public class WelcomeFragment extends Fragment
 //            crawler.checkIn(new SimplifiedLocation(37.489933, -121.930999), address);
 //            crawlers.put(crawler.getUserId(),crawler);
 //        }
-//        address = "722 Edgewater Blvd \nFoster City, California 94404";
+//        address = "722 Edgewater Blvd\nFoster City, California 94404";
 //        for(int i = 0 ; i <100; i++){
 //            Crawler crawler = new Crawler(UUID.randomUUID().toString(), Crawler.Gender.UNDEFINED);
 //            crawler.checkIn(new SimplifiedLocation(37.5535048, -122.2743742), address);
 //            crawlers.put(crawler.getUserId(),crawler);
 //        }
-//        address = "744 Edgewater Blvd \nFoster City, California 94404";
+//        address = "744 Edgewater Blvd\nFoster City, California 94404";
 //        for(int i = 0 ; i <100; i++){
 //            Crawler crawler = new Crawler(UUID.randomUUID().toString(), Crawler.Gender.UNDEFINED);
 //            crawler.checkIn(new SimplifiedLocation(37.552946, -122.274577), address);
