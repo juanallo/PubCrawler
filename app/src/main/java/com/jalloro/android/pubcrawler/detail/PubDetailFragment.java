@@ -3,6 +3,8 @@ package com.jalloro.android.pubcrawler.detail;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.ResultReceiver;
 import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -22,6 +24,8 @@ import java.util.List;
 public class PubDetailFragment extends Fragment {
 
     private Place currentPlace;
+    private PlaceResultReceiver placeReceiver;
+    private SimplifiedLocation currentLocation;
 
     public PubDetailFragment() {
     }
@@ -31,18 +35,22 @@ public class PubDetailFragment extends Fragment {
                              Bundle savedInstanceState) {
         View rootView = inflater.inflate(R.layout.fragment_pub_detail, container, false);
 
-
         Intent intent = getActivity().getIntent();
 
         final String address = intent.getStringExtra(WelcomeFragment.PUB_ADDRESS);
-        final double longitude = intent.getDoubleExtra(WelcomeFragment.PUB_LOCATION_LONGITUDE, 0);
-        final double latitude = intent.getDoubleExtra(WelcomeFragment.PUB_LOCATION_LATITUDE, 0);
 
-        currentPlace = new Place(new SimplifiedLocation(latitude,longitude), address);
+        final double pubLongitude = intent.getDoubleExtra(PUB_LOCATION_LONGITUDE, 0);
+        final double pubLatitude = intent.getDoubleExtra(PUB_LOCATION_LATITUDE, 0);
 
-        //TODO fetch from forsquare
-        currentPlace.setName("La colmena");
-        currentPlace.setPriceRangeFromValue(2);
+        final double currentLongitude = intent.getDoubleExtra(CURRENT_LOCATION_LONGITUDE, 0);
+        final double currentLatitude = intent.getDoubleExtra(CURRENT_LOCATION_LATITUDE, 0);
+
+        currentLocation = new SimplifiedLocation(currentLatitude, currentLongitude);
+        currentPlace = new Place(new SimplifiedLocation(pubLatitude,pubLongitude), address);
+
+        placeReceiver = new PlaceResultReceiver(new Handler());
+
+        startIntentService();
 
         //TODO fetch amount of users from firebase
         currentPlace.setRealAmountOfMen(3000);
@@ -50,8 +58,6 @@ public class PubDetailFragment extends Fragment {
 
         currentPlace.setPlannedAmountOfMen(3200);
         currentPlace.setPlannedAmountOfWomen(6000);
-
-        updateUi(rootView, currentPlace);
 
         return rootView;
     }
@@ -67,9 +73,8 @@ public class PubDetailFragment extends Fragment {
         pubAddress.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                //TODO get real destination
                 Uri mapUri = Uri.parse(MAPS_BASE_URL).buildUpon()
-                        .appendQueryParameter(FROM_LOCATION, "20.344,34.34")
+                        .appendQueryParameter(FROM_LOCATION, currentLocation.toString())
                         .appendQueryParameter(TO_LOCATION, currentPlace.getLocation().toString())
                         .build();
 
@@ -81,13 +86,42 @@ public class PubDetailFragment extends Fragment {
         List<Bar> values = new ArrayList<>();
         values.add(new Bar("Now\nMen", currentPlace.getRealAmountOfMen(), R.color.light_blue));
         values.add(new Bar("Now\nWomen", currentPlace.getPlannedAmountOfWomen(), R.color.pink));
-        values.add(new Bar("Planned\nMen", currentPlace.getPlannedAmountOfMen(), R.color.light_blue) );
+        values.add(new Bar("Planned\nMen", currentPlace.getPlannedAmountOfMen(), R.color.light_blue));
         values.add(new Bar("Planned\nWomen", currentPlace.getPlannedAmountOfWomen(), R.color.pink));
         BarChart chart = (BarChart) rootView.findViewById(R.id.hot_chart);
         chart.setData(values);
     }
 
+    private void startIntentService() {
+        Intent intent = new Intent(getActivity(), FetchPlaceIntentService.class);
+        intent.putExtra(FetchPlaceIntentService.Constants.RECEIVER, placeReceiver);
+        intent.putExtra(FetchPlaceIntentService.Constants.ADDRESS_DATA_EXTRA, currentPlace.getAddress());
+        getActivity().startService(intent);
+    }
+
+    class PlaceResultReceiver extends ResultReceiver {
+        public PlaceResultReceiver(Handler handler) {
+            super(handler);
+        }
+
+        @Override
+        public void onReceiveResult(int resultCode, Bundle resultData) {
+
+            AddressInfo addressInfo = resultData.getParcelable(FetchPlaceIntentService.Constants.RESULT_DATA_KEY);
+
+            if (resultCode == FetchPlaceIntentService.Constants.SUCCESS_RESULT) {
+                currentPlace.setName(addressInfo.getName());
+                currentPlace.setPriceRange(addressInfo.getPriceRange());
+                updateUi(getView(), currentPlace);
+            }
+        }
+    }
+
     private static final String MAPS_BASE_URL = "http://maps.google.com/maps";
     private static final String FROM_LOCATION = "saddr";
     private static final String TO_LOCATION = "daddr";
+    public static final String PUB_LOCATION_LONGITUDE = "PUB_LOCATION_LONGITUDE";
+    public static final String PUB_LOCATION_LATITUDE = "PUB_LOCATION_LATITUDE";
+    public static final String CURRENT_LOCATION_LONGITUDE = "CURRENT_LOCATION_LONGITUDE";
+    public static final String CURRENT_LOCATION_LATITUDE = "CURRENT_LOCATION_LATITUDE";
 }

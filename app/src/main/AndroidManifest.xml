@@ -37,6 +37,10 @@
             android:name=".welcome.FetchAddressIntentService"
             android:exported="false" />
 
+        <service
+            android:name=".detail.FetchPlaceIntentService"
+            android:exported="false" />
+
     </application>
 
 </manifest>

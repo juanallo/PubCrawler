@@ -26,6 +26,7 @@ import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
 import com.jalloro.android.pubcrawler.R;
 import com.jalloro.android.pubcrawler.detail.PubDetailActivity;
+import com.jalloro.android.pubcrawler.detail.PubDetailFragment;
 import com.jalloro.android.pubcrawler.helpers.PlayServicesHelper;
 import com.jalloro.android.pubcrawler.model.Crawler;
 import com.jalloro.android.pubcrawler.model.SimplifiedLocation;
@@ -148,8 +149,11 @@ public class WelcomeFragment extends Fragment
     private void openDetails() {
         Intent intent = new Intent(getActivity(), PubDetailActivity.class);
         intent.putExtra(PUB_ADDRESS, currentCrawler.getLastAddress());
-        intent.putExtra(PUB_LOCATION_LONGITUDE, currentCrawler.getLastLocation().getLongitude());
-        intent.putExtra(PUB_LOCATION_LATITUDE, currentCrawler.getLastLocation().getLatitude());
+        //current and pub location are the same
+        intent.putExtra(PubDetailFragment.PUB_LOCATION_LATITUDE, currentCrawler.getLastLocation().getLatitude());
+        intent.putExtra(PubDetailFragment.PUB_LOCATION_LONGITUDE, currentCrawler.getLastLocation().getLongitude());
+        intent.putExtra(PubDetailFragment.CURRENT_LOCATION_LATITUDE, currentCrawler.getLastLocation().getLatitude());
+        intent.putExtra(PubDetailFragment.CURRENT_LOCATION_LONGITUDE, currentCrawler.getLastLocation().getLongitude());
         startActivity(intent);
     }
 
@@ -249,8 +253,6 @@ public class WelcomeFragment extends Fragment
     private final static String LOG_CAT = WelcomeFragment.class.getName();
     private static final String CRAWLER = "CRAWLER";
     public static final String PUB_ADDRESS = "PUB_ADDRESS";
-    public static final String PUB_LOCATION_LONGITUDE = "PUB_LOCATION_LONGITUDE";
-    public static final String PUB_LOCATION_LATITUDE = "PUB_LOCATION_LATITUDE";
     private static final int DETAIL_DELAY = 1000;
     private static final String CURRENT_ADDRESS = "CURRENT_ADDRESS" ;
 
