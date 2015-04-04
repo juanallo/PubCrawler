@@ -47,7 +47,7 @@
             android:value="@string/google_maps_key" />
 
         <activity
-            android:name=".near.whatIsHotActivity"
+            android:name=".near.WhatIsHotActivity"
             android:label="@string/what_is_hot"
             android:parentActivityName=".welcome.welcomeActivity">
         </activity>

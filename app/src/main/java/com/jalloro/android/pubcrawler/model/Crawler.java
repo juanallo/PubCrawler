@@ -1,6 +1,5 @@
 package com.jalloro.android.pubcrawler.model;
 
-import android.location.Location;
 import android.os.Parcel;
 import android.os.Parcelable;
 import android.support.annotation.NonNull;
@@ -36,14 +35,20 @@ public class Crawler implements Parcelable {
     }
 
     public Crawler(Parcel in) {
-       this.lastLocation = in.readParcelable(Location.class.getClassLoader());
-       String [] data = new String[5];
-       in.readStringArray(data);
-        this.userId = data[0];
-        this.lastAddress = data[1];
-        this.checkInTimeStamp = Long.parseLong(data[2]);
-        this.facebookId = data[3];
-        this.gender = Gender.valueOf(data[4]);
+       this.lastLocation = in.readParcelable(SimplifiedLocation.class.getClassLoader());
+//       String [] data = new String[5];
+//       in.readStringArray(data);
+//        this.userId = data[0];
+//        this.lastAddress = data[1];
+//        this.checkInTimeStamp = data[2] != null ? Long.parseLong(data[2]) : 0;
+//        this.facebookId = data[3];
+//        this.gender = Gender.valueOf(data[4]);
+
+        userId = in.readString();
+        lastAddress = in.readString();
+        checkInTimeStamp = in.readLong();
+        facebookId = in.readString();
+        gender = Gender.valueOf(in.readString());
     }
 
     public String getUserId() {
@@ -108,13 +113,18 @@ public class Crawler implements Parcelable {
     @Override
     public void writeToParcel(Parcel dest, int flags) {
         dest.writeParcelable(this.lastLocation,flags);
-        dest.writeArray(new String[] {
-        this.userId,
-        this.lastAddress ,
-        Long.toString(this.checkInTimeStamp),
-        this.facebookId,
-        this.gender.name()
-        });
+//        dest.writeArray(new String[] {
+//        this.userId,
+//        this.lastAddress ,
+//        Long.toString(this.checkInTimeStamp),
+//        this.facebookId,
+//        this.gender.name()
+//        });
+        dest.writeString(this.userId);
+        dest.writeString(lastAddress);
+        dest.writeLong(checkInTimeStamp);
+        dest.writeString(facebookId);
+        dest.writeString(gender.name());
     }
 
     public enum Gender {

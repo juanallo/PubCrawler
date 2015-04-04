@@ -25,7 +25,7 @@ import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.LocationListener;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
-import com.jalloro.android.pubcrawler.near.whatIsHotActivity;
+import com.jalloro.android.pubcrawler.near.WhatIsHotActivity;
 import com.jalloro.android.pubcrawler.R;
 import com.jalloro.android.pubcrawler.detail.PubDetailActivity;
 import com.jalloro.android.pubcrawler.detail.PubDetailFragment;
@@ -149,10 +149,14 @@ public class WelcomeFragment extends Fragment
             whatIsHot.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    Intent intent = new Intent(getActivity(), whatIsHotActivity.class);
-                    //current and pub location are the same
-                    intent.putExtra(PubDetailFragment.CURRENT_LOCATION, currentCrawler.getLastLocation());
-                    startActivity(intent);
+                    if(lastLocation != null){
+                        Intent intent = new Intent(getActivity(), WhatIsHotActivity.class);
+                        //current and pub location are the same
+                        intent.putExtra(PubDetailFragment.CURRENT_LOCATION, new SimplifiedLocation(lastLocation.getLatitude(), lastLocation.getLongitude()));
+                        intent.putExtra(PUB_ADDRESS,currentCrawler.getLastAddress());
+                        intent.putExtra(PubDetailFragment.PUB_LOCATION,currentCrawler.getLastLocation());
+                        startActivity(intent);
+                    }
                 }
             });
         }
