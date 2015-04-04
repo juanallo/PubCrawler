@@ -30,6 +30,7 @@ public class PubDetailFragment extends Fragment {
     private Place currentPlace;
     private PlaceResultReceiver placeReceiver;
     private SimplifiedLocation currentLocation;
+    private Firebase placeDetailsDataBase;
 
     public PubDetailFragment() {
 
@@ -70,6 +71,8 @@ public class PubDetailFragment extends Fragment {
 
             }
         });
+
+        placeDetailsDataBase = new Firebase("https://boiling-fire-4188.firebaseio.com/pubs/" + address.replace("\n", " "));
 
         return rootView;
     }
@@ -127,6 +130,7 @@ public class PubDetailFragment extends Fragment {
             if (resultCode == FetchPlaceIntentService.Constants.SUCCESS_RESULT) {
                 currentPlace.setName(addressInfo.getName());
                 currentPlace.setPriceRange(addressInfo.getPriceRange());
+                placeDetailsDataBase.setValue(currentPlace);
                 updateUi(getView(), currentPlace);
             }
             else {

@@ -53,12 +53,14 @@ public class WhatIsHotActivity extends ActionBarActivity implements GoogleMap.On
                 if(snapshot.getValue()!= null) {
                     Map<String, Object> crawlerInfo = (Map<String, Object>) snapshot.getValue();
                     for (String placeAddress : crawlerInfo.keySet()){
-                        Map<String, Object> place = (Map<String, Object>) crawlerInfo.get(placeAddress);
-                        if(place.containsKey("location")){
-                            Map<String, Object> locationInfo = (Map<String, Object>) place.get("location");
-                            final LatLng position = new LatLng((double) locationInfo.get("latitude"),(double)locationInfo.get("longitude"));
-                            final String name = (String) place.get("name");
-                            mMap.addMarker(new MarkerOptions().position(position).title(name).snippet(placeAddress));
+                        if(!placeAddress.equals(crawlerAddress.replace("\n", " "))){
+                            Map<String, Object> place = (Map<String, Object>) crawlerInfo.get(placeAddress);
+                            if(place.containsKey("location")){
+                                Map<String, Object> locationInfo = (Map<String, Object>) place.get("location");
+                                final LatLng position = new LatLng((double) locationInfo.get("latitude"),(double)locationInfo.get("longitude"));
+                                final String name = (String) place.get("name");
+                                mMap.addMarker(new MarkerOptions().position(position).title(name).snippet(placeAddress));
+                            }
                         }
                     }
                 };

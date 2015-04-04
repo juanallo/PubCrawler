@@ -137,7 +137,7 @@ public class WelcomeFragment extends Fragment
                 }
             });
 
-            final TextView viewDetails = (TextView)rootView.findViewById(R.id.open_details);
+            final Button viewDetails = (Button)rootView.findViewById(R.id.open_details);
             viewDetails.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
