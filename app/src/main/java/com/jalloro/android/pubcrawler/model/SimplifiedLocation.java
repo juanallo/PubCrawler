@@ -37,6 +37,11 @@ public class SimplifiedLocation implements Parcelable {
     }
 
     @Override
+    public String toString() {
+        return Double.toString(latitude) + "," + Double.toString(longitude);
+    }
+
+    @Override
     public int describeContents() {
         return 0;
     }

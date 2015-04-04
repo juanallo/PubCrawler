@@ -11,4 +11,6 @@
     <string name="address_found">address found in location</string>
     <string name="pub_details">Pub Details</string>
     <string name="findingAddressError">We are having a Hard time finding where you are at!!!</string>
+    <string name="view_place">View Place Details</string>
+    <string name="how_hot">How hot is this place?</string>
 </resources>

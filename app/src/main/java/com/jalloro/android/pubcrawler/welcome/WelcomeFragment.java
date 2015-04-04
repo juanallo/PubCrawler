@@ -57,6 +57,7 @@ public class WelcomeFragment extends Fragment
 
         if(savedInstanceState!= null){
             currentCrawler = savedInstanceState.getParcelable(CRAWLER);
+            currentAddress = savedInstanceState.getString(CURRENT_ADDRESS);
         }
         else {
             final String androidId = Settings.Secure.getString(getActivity().getContentResolver(),
@@ -122,14 +123,18 @@ public class WelcomeFragment extends Fragment
                         handler.postDelayed(new Runnable() {
                             @Override
                             public void run() {
-                                Intent intent = new Intent(getActivity(), PubDetailActivity.class);
-                                intent.putExtra(PUB_ADDRESS, currentCrawler.getLastAddress());
-                                intent.putExtra(PUB_LOCATION_LONGITUDE, currentCrawler.getLastLocation().getLongitude());
-                                intent.putExtra(PUB_LOCATION_LATITUDE, currentCrawler.getLastLocation().getLatitude());
-                                startActivity(intent);
+                                openDetails();
                             }
                         }, DETAIL_DELAY);
                     }
+                }
+            });
+
+            final TextView viewDetails = (TextView)rootView.findViewById(R.id.open_details);
+            viewDetails.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    openDetails();
                 }
             });
         }
@@ -140,9 +145,18 @@ public class WelcomeFragment extends Fragment
         return rootView;
     }
 
+    private void openDetails() {
+        Intent intent = new Intent(getActivity(), PubDetailActivity.class);
+        intent.putExtra(PUB_ADDRESS, currentCrawler.getLastAddress());
+        intent.putExtra(PUB_LOCATION_LONGITUDE, currentCrawler.getLastLocation().getLongitude());
+        intent.putExtra(PUB_LOCATION_LATITUDE, currentCrawler.getLastLocation().getLatitude());
+        startActivity(intent);
+    }
+
     @Override
     public void onSaveInstanceState(Bundle outState) {
         outState.putParcelable(CRAWLER,currentCrawler);
+        outState.putString(CURRENT_ADDRESS, currentAddress);
         super.onSaveInstanceState(outState);
     }
 
@@ -197,6 +211,9 @@ public class WelcomeFragment extends Fragment
         if(checkedIn){
             checkInText.setText(R.string.checked_in);
             checkInButton.setBackground(view.getResources().getDrawable(R.drawable.checked_in_button));
+
+            final TextView viewDetails = (TextView)view.findViewById(R.id.open_details);
+            viewDetails.setVisibility(View.VISIBLE);
         }
         else {
             checkInText.setText(R.string.checkIn);
@@ -221,14 +238,10 @@ public class WelcomeFragment extends Fragment
         @Override
         public void onReceiveResult(int resultCode, Bundle resultData) {
 
-            String addressOutput = resultData.getString(FetchAddressIntentService.Constants.RESULT_DATA_KEY);
+            currentAddress = resultData.getString(FetchAddressIntentService.Constants.RESULT_DATA_KEY);
 
             if (resultCode == FetchAddressIntentService.Constants.SUCCESS_RESULT) {
-                final boolean sameAddress = addressOutput.equals(currentCrawler.getLastAddress());
-                if(!sameAddress){
-                    currentAddress = addressOutput;
-                }
-                updateChecked(getView(),sameAddress);
+                updateChecked(getView(),currentAddress.equals(currentCrawler.getLastAddress()));
             }
         }
     }
@@ -238,6 +251,7 @@ public class WelcomeFragment extends Fragment
     public static final String PUB_ADDRESS = "PUB_ADDRESS";
     public static final String PUB_LOCATION_LONGITUDE = "PUB_LOCATION_LONGITUDE";
     public static final String PUB_LOCATION_LATITUDE = "PUB_LOCATION_LATITUDE";
-    private static final int DETAIL_DELAY = 2000;
+    private static final int DETAIL_DELAY = 1000;
+    private static final String CURRENT_ADDRESS = "CURRENT_ADDRESS" ;
 
 }
