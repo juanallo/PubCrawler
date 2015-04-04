@@ -86,7 +86,7 @@ public class WelcomeFragment extends Fragment
                         }
                         if(crawlerInfo.containsKey("lastLocation")){
                             Map<String, Object> locationInfo = (Map<String, Object>) crawlerInfo.get("lastLocation");
-                            currentCrawler.setLastLocation(new SimplifiedLocation((double)locationInfo.get("longitude"), (double) locationInfo.get("latitude")));
+                            currentCrawler.setLastLocation(new SimplifiedLocation((double) locationInfo.get("latitude"),(double)locationInfo.get("longitude")));
                         }
                         currentCrawler.setGender(Crawler.Gender.valueOf((String) crawlerInfo.get("gender")));
 
@@ -116,17 +116,23 @@ public class WelcomeFragment extends Fragment
                 @Override
                 public void onClick(View v) {
                     if(!currentCrawler.isCheckedIn(currentAddress)){
-                        currentCrawler.checkIn(new SimplifiedLocation(lastLocation.getLongitude(),lastLocation.getLatitude()), currentAddress);
-                        userInfo.setValue(currentCrawler);
-                        updateChecked(rootView, true);
+                        if(lastLocation != null){
+                            currentCrawler.checkIn(new SimplifiedLocation(lastLocation.getLatitude(), lastLocation.getLongitude()), currentAddress);
+                            userInfo.setValue(currentCrawler);
+                            updateChecked(rootView, true);
 
-                        Handler handler = new Handler();
-                        handler.postDelayed(new Runnable() {
-                            @Override
-                            public void run() {
-                                openDetails();
-                            }
-                        }, DETAIL_DELAY);
+                            Handler handler = new Handler();
+                            handler.postDelayed(new Runnable() {
+                                @Override
+                                public void run() {
+                                    openDetails();
+                                }
+                            }, DETAIL_DELAY);
+                        }
+                        else {
+                            //TODO add toast indicating that the location is not there.
+                        }
+
                     }
                 }
             });
@@ -150,10 +156,8 @@ public class WelcomeFragment extends Fragment
         Intent intent = new Intent(getActivity(), PubDetailActivity.class);
         intent.putExtra(PUB_ADDRESS, currentCrawler.getLastAddress());
         //current and pub location are the same
-        intent.putExtra(PubDetailFragment.PUB_LOCATION_LATITUDE, currentCrawler.getLastLocation().getLatitude());
-        intent.putExtra(PubDetailFragment.PUB_LOCATION_LONGITUDE, currentCrawler.getLastLocation().getLongitude());
-        intent.putExtra(PubDetailFragment.CURRENT_LOCATION_LATITUDE, currentCrawler.getLastLocation().getLatitude());
-        intent.putExtra(PubDetailFragment.CURRENT_LOCATION_LONGITUDE, currentCrawler.getLastLocation().getLongitude());
+        intent.putExtra(PubDetailFragment.PUB_LOCATION, currentCrawler.getLastLocation());
+        intent.putExtra(PubDetailFragment.CURRENT_LOCATION, currentCrawler.getLastLocation());
         startActivity(intent);
     }
 

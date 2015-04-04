@@ -5,7 +5,7 @@ public enum PriceRange{
     $$(2, "$$"),
     $$$(3, "$$$"),
     $$$$(4, "$$$$"),
-    UNKNOWN(5, "??");
+    UNKNOWN(5, "");
 
     private final String label;
     private int value;

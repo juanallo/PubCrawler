@@ -4,8 +4,8 @@ import android.os.Parcel;
 import android.os.Parcelable;
 
 public class SimplifiedLocation implements Parcelable {
-    private double longitude;
     private double latitude;
+    private double longitude;
 
     public SimplifiedLocation(double latitude, double longitude) {
         this.latitude = latitude;
@@ -13,11 +13,8 @@ public class SimplifiedLocation implements Parcelable {
     }
 
     public SimplifiedLocation(Parcel in) {
-        String[] data = new String[2];
-
-        in.readStringArray(data);
-        this.longitude = Double.parseDouble(data[0]);
-        this.latitude = Double.parseDouble(data[1]);
+        this.latitude = in.readDouble();
+        this.longitude = in.readDouble();
     }
 
     public double getLongitude() {
@@ -48,11 +45,8 @@ public class SimplifiedLocation implements Parcelable {
 
     @Override
     public void writeToParcel(Parcel dest, int flags) {
-        final String[] val = {
-                Double.toString(this.longitude),
-                Double.toString(this.latitude)
-        };
-        dest.writeArray(val);
+        dest.writeDouble(latitude);
+        dest.writeDouble(longitude);
     }
 
     public static final Parcelable.Creator CREATOR = new Parcelable.Creator() {

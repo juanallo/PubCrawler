@@ -13,4 +13,5 @@
     <string name="findingAddressError">We are having a Hard time finding where you are at!!!</string>
     <string name="view_place">View Place Details</string>
     <string name="how_hot">How hot is this place?</string>
+    <string name="looking_place_details">Looking Place...</string>
 </resources>

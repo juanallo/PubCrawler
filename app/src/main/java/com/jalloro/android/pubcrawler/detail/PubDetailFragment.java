@@ -39,14 +39,10 @@ public class PubDetailFragment extends Fragment {
 
         final String address = intent.getStringExtra(WelcomeFragment.PUB_ADDRESS);
 
-        final double pubLongitude = intent.getDoubleExtra(PUB_LOCATION_LONGITUDE, 0);
-        final double pubLatitude = intent.getDoubleExtra(PUB_LOCATION_LATITUDE, 0);
+        currentLocation = intent.getParcelableExtra(CURRENT_LOCATION);
 
-        final double currentLongitude = intent.getDoubleExtra(CURRENT_LOCATION_LONGITUDE, 0);
-        final double currentLatitude = intent.getDoubleExtra(CURRENT_LOCATION_LATITUDE, 0);
-
-        currentLocation = new SimplifiedLocation(currentLatitude, currentLongitude);
-        currentPlace = new Place(new SimplifiedLocation(pubLatitude,pubLongitude), address);
+        final SimplifiedLocation pubLocation = intent.getParcelableExtra(PUB_LOCATION);
+        currentPlace = new Place(pubLocation, address);
 
         placeReceiver = new PlaceResultReceiver(new Handler());
 
@@ -96,6 +92,7 @@ public class PubDetailFragment extends Fragment {
         Intent intent = new Intent(getActivity(), FetchPlaceIntentService.class);
         intent.putExtra(FetchPlaceIntentService.Constants.RECEIVER, placeReceiver);
         intent.putExtra(FetchPlaceIntentService.Constants.ADDRESS_DATA_EXTRA, currentPlace.getAddress());
+        intent.putExtra(FetchPlaceIntentService.Constants.LOCATION_DATA_EXTRA, currentPlace.getLocation());
         getActivity().startService(intent);
     }
 
@@ -114,14 +111,16 @@ public class PubDetailFragment extends Fragment {
                 currentPlace.setPriceRange(addressInfo.getPriceRange());
                 updateUi(getView(), currentPlace);
             }
+            else {
+               //TODO update UI with moon details!
+               // updateUi(getView(), addressInfo);
+            }
         }
     }
 
     private static final String MAPS_BASE_URL = "http://maps.google.com/maps";
     private static final String FROM_LOCATION = "saddr";
     private static final String TO_LOCATION = "daddr";
-    public static final String PUB_LOCATION_LONGITUDE = "PUB_LOCATION_LONGITUDE";
-    public static final String PUB_LOCATION_LATITUDE = "PUB_LOCATION_LATITUDE";
-    public static final String CURRENT_LOCATION_LONGITUDE = "CURRENT_LOCATION_LONGITUDE";
-    public static final String CURRENT_LOCATION_LATITUDE = "CURRENT_LOCATION_LATITUDE";
+    public static final String PUB_LOCATION = "PUB_LOCATION";
+    public static final String CURRENT_LOCATION = "CURRENT_LOCATION";
 }
