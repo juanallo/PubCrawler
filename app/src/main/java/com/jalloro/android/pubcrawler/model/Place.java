@@ -7,10 +7,12 @@ public class Place {
     private final String address;
     private String name;
     private PriceRange priceRange;
-    private int realAmountOfMen;
-    private int realAmountOfWomen;
-    private int plannedAmountOfMen;
-    private int plannedAmountOfWomen;
+    private long realAmountOfMen;
+    private long realAmountOfUndefined;
+    private long realAmountOfWomen;
+    private long plannedAmountOfMen;
+    private long plannedAmountOfUndefined;
+    private long plannedAmountOfWomen;
 
     public Place(SimplifiedLocation location, String address) {
         this.location = location;
@@ -41,38 +43,53 @@ public class Place {
         return location;
     }
 
-    public int getRealAmountOfMen() {
+    public long getRealAmountOfMen() {
         return realAmountOfMen;
     }
 
-    public void setRealAmountOfMen(int realAmountOfMen) {
+    public void setRealAmountOfMen(long realAmountOfMen) {
         this.realAmountOfMen = realAmountOfMen;
     }
 
-    public int getRealAmountOfWomen() {
+    public long getRealAmountOfWomen() {
         return realAmountOfWomen;
     }
 
-    public void setRealAmountOfWomen(int realAmountOfWomen) {
+    public void setRealAmountOfWomen(long realAmountOfWomen) {
         this.realAmountOfWomen = realAmountOfWomen;
     }
 
-    public int getPlannedAmountOfMen() {
+    public long getPlannedAmountOfMen() {
         return plannedAmountOfMen;
     }
 
-    public void setPlannedAmountOfMen(int plannedAmountOfMen) {
+    public void setPlannedAmountOfMen(long plannedAmountOfMen) {
         this.plannedAmountOfMen = plannedAmountOfMen;
     }
 
-    public int getPlannedAmountOfWomen() {
+    public long getPlannedAmountOfWomen() {
         return plannedAmountOfWomen;
     }
 
-    public void setPlannedAmountOfWomen(int plannedAmountOfWomen) {
+    public void setPlannedAmountOfWomen(long plannedAmountOfWomen) {
         this.plannedAmountOfWomen = plannedAmountOfWomen;
     }
 
+    public long getRealAmountOfUndefined() {
+        return realAmountOfUndefined;
+    }
+
+    public void setRealAmountOfUndefined(long realAmountOfUndefined) {
+        this.realAmountOfUndefined = realAmountOfUndefined;
+    }
+
+    public long getPlannedAmountOfUndefined() {
+        return plannedAmountOfUndefined;
+    }
+
+    public void setPlannedAmountOfUndefined(long plannedAmountOfUndefined) {
+        this.plannedAmountOfUndefined = plannedAmountOfUndefined;
+    }
 
     public void setPriceRange(PriceRange priceRange) {
         this.priceRange = priceRange;

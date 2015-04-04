@@ -11,6 +11,10 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
+import com.firebase.client.DataSnapshot;
+import com.firebase.client.Firebase;
+import com.firebase.client.FirebaseError;
+import com.firebase.client.ValueEventListener;
 import com.jalloro.android.pubcrawler.R;
 import com.jalloro.android.pubcrawler.chart.Bar;
 import com.jalloro.android.pubcrawler.chart.BarChart;
@@ -28,6 +32,7 @@ public class PubDetailFragment extends Fragment {
     private SimplifiedLocation currentLocation;
 
     public PubDetailFragment() {
+
     }
 
     @Override
@@ -48,12 +53,23 @@ public class PubDetailFragment extends Fragment {
 
         startIntentService();
 
-        //TODO fetch amount of users from firebase
-        currentPlace.setRealAmountOfMen(3000);
-        currentPlace.setRealAmountOfWomen(2000);
+        final Firebase firebase = new Firebase("https://boiling-fire-4188.firebaseio.com/crawlers");
+        firebase.orderByChild("lastAddress").equalTo(address).addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                //TODO ADD WOMEN/MEN
+                //TODO CHECK TIMESTAMP
+                currentPlace.setRealAmountOfUndefined(dataSnapshot.getChildrenCount());
+                //TODO GET PLANNED
+                currentPlace.setPlannedAmountOfUndefined(dataSnapshot.getChildrenCount() + 30);
+                updateStatusChart(getView(), currentPlace);
+            }
 
-        currentPlace.setPlannedAmountOfMen(3200);
-        currentPlace.setPlannedAmountOfWomen(6000);
+            @Override
+            public void onCancelled(FirebaseError firebaseError) {
+
+            }
+        });
 
         return rootView;
     }
@@ -79,11 +95,13 @@ public class PubDetailFragment extends Fragment {
             }
         });
 
+        updateStatusChart(rootView, currentPlace);
+    }
+
+    private void updateStatusChart(View rootView, Place currentPlace) {
         List<Bar> values = new ArrayList<>();
-        values.add(new Bar("Now\nMen", currentPlace.getRealAmountOfMen(), R.color.light_blue));
-        values.add(new Bar("Now\nWomen", currentPlace.getPlannedAmountOfWomen(), R.color.pink));
-        values.add(new Bar("Planned\nMen", currentPlace.getPlannedAmountOfMen(), R.color.light_blue));
-        values.add(new Bar("Planned\nWomen", currentPlace.getPlannedAmountOfWomen(), R.color.pink));
+        values.add(new Bar("Now", currentPlace.getRealAmountOfUndefined(), R.color.light_blue));
+        values.add(new Bar("Planned", currentPlace.getPlannedAmountOfUndefined(), R.color.pink));
         BarChart chart = (BarChart) rootView.findViewById(R.id.hot_chart);
         chart.setData(values);
     }

@@ -89,7 +89,6 @@ public class WelcomeFragment extends Fragment
                             currentCrawler.setLastLocation(new SimplifiedLocation((double) locationInfo.get("latitude"),(double)locationInfo.get("longitude")));
                         }
                         currentCrawler.setGender(Crawler.Gender.valueOf((String) crawlerInfo.get("gender")));
-
                         updateChecked(getView(), currentCrawler.isCheckedIn(currentAddress));
                     }
                 }
@@ -253,6 +252,31 @@ public class WelcomeFragment extends Fragment
             }
         }
     }
+
+//    public void createTestUsers(){
+//        final Firebase firebase = new Firebase("https://boiling-fire-4188.firebaseio.com/crawlers");
+//        String address = "760 Mission Court \nFremont, California 94539";
+//        Map<String, Crawler> crawlers = new HashMap<String, Crawler>();
+//        crawlers.put(currentCrawler.getUserId(), currentCrawler);
+//        for(int i = 0 ; i <100; i++){
+//            Crawler crawler = new Crawler(UUID.randomUUID().toString(), Crawler.Gender.UNDEFINED);
+//            crawler.checkIn(new SimplifiedLocation(37.489933, -121.930999), address);
+//            crawlers.put(crawler.getUserId(),crawler);
+//        }
+//        address = "722 Edgewater Blvd \nFoster City, California 94404";
+//        for(int i = 0 ; i <100; i++){
+//            Crawler crawler = new Crawler(UUID.randomUUID().toString(), Crawler.Gender.UNDEFINED);
+//            crawler.checkIn(new SimplifiedLocation(37.5535048, -122.2743742), address);
+//            crawlers.put(crawler.getUserId(),crawler);
+//        }
+//        address = "744 Edgewater Blvd \nFoster City, California 94404";
+//        for(int i = 0 ; i <100; i++){
+//            Crawler crawler = new Crawler(UUID.randomUUID().toString(), Crawler.Gender.UNDEFINED);
+//            crawler.checkIn(new SimplifiedLocation(37.552946, -122.274577), address);
+//            crawlers.put(crawler.getUserId(),crawler);
+//        }
+//        firebase.setValue(crawlers);
+//    }
 
     private final static String LOG_CAT = WelcomeFragment.class.getName();
     private static final String CRAWLER = "CRAWLER";

@@ -3,10 +3,10 @@ package com.jalloro.android.pubcrawler.chart;
 public class Bar {
 
     private final String label;
-    private final int value;
-    private final int colorId;
+    private final long value;
+    private final long colorId;
 
-    public Bar(String label, int value, int colorId) {
+    public Bar(String label, long value, long colorId) {
         this.label = label;
         this.value = value;
         this.colorId = colorId;
@@ -16,11 +16,11 @@ public class Bar {
         return label;
     }
 
-    public int getValue() {
+    public long getValue() {
         return value;
     }
 
-    public int getColorId() {
+    public long getColorId() {
         return colorId;
     }
 }

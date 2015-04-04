@@ -19,6 +19,7 @@ public class BarChart extends View {
     private Paint boxPaint1;
     private Paint boxPaint2;
     private Paint textPaint;
+    private Paint textPaint1;
 
 
     public BarChart(Context context) {
@@ -43,6 +44,14 @@ public class BarChart extends View {
         boxPaint1 = new Paint();
         boxPaint2 = new Paint();
         textPaint = new Paint();
+        textPaint1 = new Paint();
+
+        textPaint.setColor(getResources().getColor(R.color.white));
+        textPaint1.setColor(getResources().getColor(R.color.grey_700));
+        boxPaint1.setColor(getResources().getColor(R.color.light_blue));
+        boxPaint2.setColor(getResources().getColor(R.color.pink));
+        textPaint.setTextSize(14*scaleFactor);
+        textPaint1.setTextSize(14*scaleFactor);
     }
 
     public void setData(List<Bar> data) {
@@ -59,43 +68,45 @@ public class BarChart extends View {
 
         int bigPadding = (int) ( 20 * scaleFactor);
 
-        textPaint.setColor(getResources().getColor(R.color.white));
-        boxPaint1.setColor(getResources().getColor(R.color.light_blue));
-        boxPaint2.setColor(getResources().getColor(R.color.pink));
-        textPaint.setTextSize(14*scaleFactor);
+        int maxBarWidth = 5 * bigPadding;
 
         final int amountOfBars = data.size();
 
         int smallPadding = (int) ( 5 * scaleFactor);
         if(amountOfBars >0){
-            final int barWidth = (width - 2 * smallPadding)/amountOfBars - amountOfBars * 2 * smallPadding;
+            int barWidth = (width - 2 * smallPadding)/amountOfBars - amountOfBars * 2 * smallPadding;
 
-            final int maxBarHeight = height - 2 * bigPadding;
+            if(barWidth > maxBarWidth){
+                barWidth = maxBarWidth;
+            }
+            final long maxBarHeight = height - 2 * bigPadding;
 
-            final int biggestBarFound = findBiggestBar(data);
+            final long biggestBarFound = findBiggestBar(data);
 
             int startingPosition = smallPadding;
             boolean useFirstPaint = true;
             for(Bar bar : data){
-                final int barValue = bar.getValue();
-                Integer paintedBarValue = barValue * maxBarHeight / biggestBarFound;
+                final long barValue = bar.getValue();
+                long  paintedBarValue = barValue * maxBarHeight / biggestBarFound;
                 if(paintedBarValue < bigPadding){
                     paintedBarValue = bigPadding;
                 }
                 canvas.drawRect(startingPosition,height - bigPadding - paintedBarValue,barWidth + startingPosition,height   , useFirstPaint ? boxPaint1 : boxPaint2);
-                int x = startingPosition + smallPadding, y = (height - bigPadding);
+                int x = startingPosition + smallPadding, y = (height - smallPadding);
+                //y = (height - bigPadding);
                 for (String line: bar.getLabel().split("\n")) {
                     canvas.drawText(line,x,y, textPaint);
                     y += textPaint.descent() - textPaint.ascent();
                 }
+                canvas.drawText(Long.toString(barValue),x,height - bigPadding - paintedBarValue - smallPadding, textPaint1);
                 startingPosition += smallPadding + barWidth;
                 useFirstPaint = !useFirstPaint;
             }
         }
     }
 
-    private int findBiggestBar(List<Bar> data) {
-        int biggest = 0;
+    private long findBiggestBar(List<Bar> data) {
+        long biggest = 1;
         for (Bar bar : data){
             if(bar.getValue()> biggest){
                 biggest = bar.getValue();
