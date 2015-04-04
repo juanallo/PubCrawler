@@ -24,7 +24,7 @@ import com.jalloro.android.pubcrawler.welcome.WelcomeFragment;
 
 import java.util.Map;
 
-public class WhatIsHotActivity extends ActionBarActivity implements GoogleMap.OnMarkerClickListener {
+public class WhatIsHotActivity extends ActionBarActivity implements GoogleMap.OnInfoWindowClickListener {
 
     private static final String YOU = "You";
     private static final String LOG_CAT = WhatIsHotActivity.class.getName();
@@ -123,22 +123,8 @@ public class WhatIsHotActivity extends ActionBarActivity implements GoogleMap.On
         mMap.getUiSettings().setZoomControlsEnabled(true);
         mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(position, 15));
 
-        mMap.setOnMarkerClickListener(this);
+        mMap.setOnInfoWindowClickListener(this);
 
-
-    }
-
-    @Override
-    public boolean onMarkerClick(Marker marker) {
-        if(marker.getTitle().equals(YOU)){
-            openDetails(currentLocation, currentLocation, crawlerAddress);
-        }
-        else {
-            final LatLng position = marker.getPosition();
-            openDetails(currentLocation, new SimplifiedLocation(position.latitude, position.longitude), marker.getSnippet());
-        }
-
-        return false;
     }
 
     private void openDetails(SimplifiedLocation currentLocation, SimplifiedLocation pubLocation, String pubAddress) {
@@ -148,5 +134,16 @@ public class WhatIsHotActivity extends ActionBarActivity implements GoogleMap.On
         intent.putExtra(PubDetailFragment.PUB_LOCATION, pubLocation);
         intent.putExtra(PubDetailFragment.CURRENT_LOCATION, currentLocation);
         startActivity(intent);
+    }
+
+    @Override
+    public void onInfoWindowClick(Marker marker) {
+        if(marker.getTitle().equals(YOU)){
+            openDetails(currentLocation, currentLocation, crawlerAddress);
+        }
+        else {
+            final LatLng position = marker.getPosition();
+            openDetails(currentLocation, new SimplifiedLocation(position.latitude, position.longitude), marker.getSnippet());
+        }
     }
 }
