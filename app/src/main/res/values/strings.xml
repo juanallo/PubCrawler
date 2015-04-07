@@ -16,4 +16,5 @@
     <string name="looking_place_details">Looking Place...</string>
     <string name="title_activity_near">Places Nearby</string>
     <string name="what_is_hot">What\'s hot?</string>
+    <string name="content_authority" translatable="false">com.jalloro.android.pubcrawler.app</string>
 </resources>

@@ -35,6 +35,12 @@
             android:name="com.google.android.gms.version"
             android:value="@integer/google_play_services_version" />
 
+        <provider
+            android:authorities="@string/content_authority"
+            android:name=".content.PubProvider"
+            android:exported="false"
+            android:syncable="true" />
+
         <service
             android:name=".welcome.FetchAddressIntentService"
             android:exported="false" />

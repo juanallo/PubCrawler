@@ -1,13 +1,18 @@
 package com.jalloro.android.pubcrawler.welcome;
 
+import android.content.ContentValues;
 import android.content.Intent;
+import android.database.Cursor;
 import android.location.Location;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.ResultReceiver;
 import android.provider.Settings;
 import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
+import android.support.v4.app.LoaderManager;
+import android.support.v4.content.CursorLoader;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -16,16 +21,14 @@ import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.TextView;
 
-import com.firebase.client.DataSnapshot;
 import com.firebase.client.Firebase;
-import com.firebase.client.FirebaseError;
-import com.firebase.client.ValueEventListener;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.LocationListener;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
 import com.jalloro.android.pubcrawler.R;
+import com.jalloro.android.pubcrawler.content.PubContract;
 import com.jalloro.android.pubcrawler.detail.PubDetailActivity;
 import com.jalloro.android.pubcrawler.detail.PubDetailFragment;
 import com.jalloro.android.pubcrawler.helpers.GoogleConnectionApiClientListener;
@@ -34,12 +37,9 @@ import com.jalloro.android.pubcrawler.model.Crawler;
 import com.jalloro.android.pubcrawler.model.SimplifiedLocation;
 import com.jalloro.android.pubcrawler.near.WhatIsHotActivity;
 
-import java.util.Map;
-
 public class WelcomeFragment extends Fragment
-        implements GoogleConnectionApiClientListener, LocationListener
+        implements GoogleConnectionApiClientListener, LocationListener, LoaderManager.LoaderCallbacks<Cursor>
 {
-
     private GoogleApiClient googleApiClient;
     private Location lastLocation;
     private LocationRequest locationRequest;
@@ -57,12 +57,15 @@ public class WelcomeFragment extends Fragment
         if(savedInstanceState!= null){
             currentCrawler = savedInstanceState.getParcelable(CRAWLER);
             currentAddress = savedInstanceState.getString(CURRENT_ADDRESS);
+            lastLocation = savedInstanceState.getParcelable(LAST_LOCATION);
         }
         else {
-            //TODO this should be returned by contentProvided
-            final String androidId = Settings.Secure.getString(getActivity().getContentResolver(), Settings.Secure.ANDROID_ID);
-            //first time, creating default crawler;
-            currentCrawler = new Crawler(androidId, Crawler.Gender.UNDEFINED);
+            final TextView checkInText = (TextView)rootView.findViewById(R.id.checkInText);
+            final ImageButton checkInButton = (ImageButton)rootView.findViewById(R.id.checkinButton);
+            final Button whatIsHot = (Button) rootView.findViewById(R.id.what_is_hot);
+            checkInText.setVisibility(View.GONE);
+            checkInButton.setVisibility(View.GONE);
+            whatIsHot.setVisibility(View.GONE);
         }
 
         if(PlayServicesHelper.isGooglePlayInstalled(getActivity())){
@@ -80,6 +83,7 @@ public class WelcomeFragment extends Fragment
 
         }
         else {
+            //isGooglePlayInstalled will show a dialog to the user.
             disabledUi(rootView);
         }
 
@@ -108,57 +112,24 @@ public class WelcomeFragment extends Fragment
     public void onSaveInstanceState(Bundle outState) {
         outState.putParcelable(CRAWLER,currentCrawler);
         outState.putString(CURRENT_ADDRESS, currentAddress);
+        outState.putParcelable(LAST_LOCATION, lastLocation);
         super.onSaveInstanceState(outState);
     }
 
     @Override
     public void onConnected(Bundle bundle) {
         lastLocation =  LocationServices.FusedLocationApi.getLastLocation(googleApiClient);
-        startFetchAddressService();
+        fetchAddress();
 
         final View rootView = getView();
         if(lastLocation != null && rootView != null){
-
-            updateChecked(rootView, currentCrawler.isCheckedIn(lastLocation));
-
-            userInfo = new Firebase("https://boiling-fire-4188.firebaseio.com/crawlers/" + currentCrawler.getUserId());
-            //TODO remove this should be managed by the contentProvider
-            userInfo.addListenerForSingleValueEvent(new ValueEventListener(){
-                @Override
-                public void onDataChange(DataSnapshot dataSnapshot) {
-                    if(dataSnapshot.getValue()!= null){
-                        Map<String, Object> crawlerInfo = (Map<String, Object>) dataSnapshot.getValue();
-                        currentCrawler.setLastAddress((String)crawlerInfo.get("lastAddress"));
-                        currentCrawler.setFacebookId((String) crawlerInfo.get("facebookId"));
-                        if(crawlerInfo.containsKey("checkInTimeStamp")){
-                            currentCrawler.setCheckInTimeStamp(Long.parseLong(crawlerInfo.get("checkInTimeStamp").toString()));
-                        }
-                        if(crawlerInfo.containsKey("lastLocation")){
-                            Map<String, Object> locationInfo = (Map<String, Object>) crawlerInfo.get("lastLocation");
-                            currentCrawler.setLastLocation(new SimplifiedLocation((double) locationInfo.get("latitude"),(double)locationInfo.get("longitude")));
-                        }
-                        currentCrawler.setGender(Crawler.Gender.valueOf((String) crawlerInfo.get("gender")));
-                        updateChecked(rootView, currentCrawler.isCheckedIn(lastLocation));
-                    }
-                }
-
-                @Override
-                public void onCancelled(FirebaseError firebaseError) {
-                    Log.e(LOG_CAT, firebaseError.getMessage());
-                }
-            });
 
             final ImageButton checkInButton = (ImageButton) rootView.findViewById(R.id.checkinButton);
             checkInButton.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
                     if(!currentCrawler.isCheckedIn(lastLocation)){
-
-                        currentCrawler.checkIn(new SimplifiedLocation(lastLocation.getLatitude(), lastLocation.getLongitude()), currentAddress);
-                        userInfo.setValue(currentCrawler);
-                        updateChecked(rootView, true);
-
-                        openDetails();
+                        checkIn(rootView);
                     }
                 }
             });
@@ -184,6 +155,10 @@ public class WelcomeFragment extends Fragment
                 }
             });
             PlayServicesHelper.startLocationUpdates(googleApiClient, locationRequest, this);
+
+            if(currentCrawler != null){
+                updateChecked(rootView,currentCrawler.isCheckedIn(lastLocation));
+            }
         }
         else {
             //TODO add toast if root view is null
@@ -192,6 +167,31 @@ public class WelcomeFragment extends Fragment
                 disabledUi(rootView);
             }
         }
+    }
+
+    private void checkIn(View rootView) {
+        currentCrawler.checkIn(new SimplifiedLocation(lastLocation.getLatitude(), lastLocation.getLongitude()), currentAddress);
+        userInfo.setValue(currentCrawler);
+
+        // Defines an object to contain the new values to insert
+        ContentValues mNewValues = new ContentValues();
+
+        mNewValues.put(PubContract.CrawlerLocation.GENDER, currentCrawler.getGender().name());
+        mNewValues.put(PubContract.CrawlerLocation.COLUMN_LAST_ADDRESS, currentCrawler.getLastAddress());
+        mNewValues.put(PubContract.CrawlerLocation.COLUMN_TIMESTAMP, currentCrawler.getCheckInTimeStamp());
+        mNewValues.put(PubContract.CrawlerLocation.COLUMN_COORD_LAT, currentCrawler.getLastLocation().getLatitude());
+        mNewValues.put(PubContract.CrawlerLocation.COLUMN_COORD_LONG, currentCrawler.getLastLocation().getLongitude());
+
+        getActivity().getContentResolver().update(
+                PubContract.CrawlerLocation.CONTENT_URI,
+                mNewValues,
+                null,
+                null
+        );
+
+        updateChecked(rootView, true);
+
+        openDetails();
     }
 
     @Override
@@ -206,9 +206,11 @@ public class WelcomeFragment extends Fragment
 
     @Override
     public void onLocationChanged(Location location) {
-        if(PlayServicesHelper.distance(lastLocation, location) > Crawler.GEO_DISTANCE){
+        final double distance = PlayServicesHelper.distance(lastLocation, location);
+        if(distance > Crawler.GEO_DISTANCE){
+            Log.d(LOG_CAT, "Distance between old and new location:" + distance);
             lastLocation = location;
-            startFetchAddressService();
+            fetchAddress();
         }
     }
 
@@ -229,8 +231,12 @@ public class WelcomeFragment extends Fragment
     }
 
     private void updateChecked(@NonNull final View view, final boolean checkedIn) {
-        TextView checkInText = (TextView)view.findViewById(R.id.checkInText);
+        final TextView checkInText = (TextView)view.findViewById(R.id.checkInText);
         final ImageButton checkInButton = (ImageButton)view.findViewById(R.id.checkinButton);
+        final Button whatIsHot = (Button) view.findViewById(R.id.what_is_hot);
+        checkInText.setVisibility(View.VISIBLE);
+        checkInButton.setVisibility(View.VISIBLE);
+        whatIsHot.setVisibility(View.VISIBLE);
         if(checkedIn){
             checkInText.setText(R.string.checked_in);
             checkInButton.setBackground(view.getResources().getDrawable(R.drawable.checked_in_button));
@@ -244,7 +250,7 @@ public class WelcomeFragment extends Fragment
         }
     }
 
-    private void startFetchAddressService() {
+    private void fetchAddress() {
         if(addressReceiver == null){
             //creating the service addressReceiver.
             addressReceiver = new AddressResultReceiver(new Handler());
@@ -255,6 +261,65 @@ public class WelcomeFragment extends Fragment
         getActivity().startService(intent);
     }
 
+    @Override
+    public android.support.v4.content.Loader<Cursor> onCreateLoader(int id, Bundle args) {
+
+        Uri crawlerUri = PubContract.CrawlerLocation.buildCrawlerUri();
+
+        return new CursorLoader(getActivity(),
+                crawlerUri,
+                PubContract.CrawlerLocation.COLUMNS,
+                null,
+                null,
+                null);
+    }
+
+    @Override
+    public void onLoadFinished(android.support.v4.content.Loader<Cursor> loader, Cursor data) {
+        if (data.moveToFirst()){
+            final String id = data.getString(data.getColumnIndex(PubContract.CrawlerLocation._ID));
+            final Crawler.Gender gender = Crawler.Gender.valueOf(data.getString(data.getColumnIndex(PubContract.CrawlerLocation.GENDER)));
+            currentCrawler = new Crawler(id, gender);
+
+            final String address = data.getString(data.getColumnIndex(PubContract.CrawlerLocation.COLUMN_LAST_ADDRESS));
+
+            if(address != null && !address.isEmpty()){
+
+                currentCrawler.setLastAddress(address);
+
+                final long checkInTimeStamp = data.getLong(data.getColumnIndex(PubContract.CrawlerLocation.COLUMN_TIMESTAMP));
+                currentCrawler.setCheckInTimeStamp(checkInTimeStamp);
+
+                final double latitude = data.getDouble(data.getColumnIndex(PubContract.CrawlerLocation.COLUMN_COORD_LAT));
+                final double longitude = data.getDouble(data.getColumnIndex(PubContract.CrawlerLocation.COLUMN_COORD_LONG));
+                currentCrawler.setLastLocation(new SimplifiedLocation(latitude,longitude));
+            }
+
+            if(lastLocation != null){
+                updateChecked(getView(), currentCrawler.isCheckedIn(lastLocation));
+            }
+
+            userInfo = new Firebase("https://boiling-fire-4188.firebaseio.com/crawlers/" + currentCrawler.getUserId());
+        }
+        else {
+            Log.e(LOG_CAT, "Default user not found in BD, forcing creation.");
+            final String androidId = android.provider.Settings.Secure.getString(getActivity().getContentResolver(), Settings.Secure.ANDROID_ID);
+            currentCrawler = new Crawler(androidId, Crawler.Gender.UNDEFINED);
+        }
+    }
+
+    @Override
+    public void onActivityCreated(Bundle savedInstanceState) {
+        getLoaderManager().initLoader(CRAWLER_LOADER, null, this);
+        super.onActivityCreated(savedInstanceState);
+    }
+
+
+    @Override
+    public void onLoaderReset(android.support.v4.content.Loader<Cursor> loader) {
+        //nothing to do!
+    }
+
     class AddressResultReceiver extends ResultReceiver {
         public AddressResultReceiver(Handler handler) {
             super(handler);
@@ -262,11 +327,9 @@ public class WelcomeFragment extends Fragment
 
         @Override
         public void onReceiveResult(int resultCode, Bundle resultData) {
-
             currentAddress = resultData.getString(FetchAddressIntentService.Constants.RESULT_DATA_KEY);
-
             if (resultCode == FetchAddressIntentService.Constants.SUCCESS_RESULT) {
-                updateChecked(getView(),currentAddress.equals(currentCrawler.getLastAddress()));
+                updateChecked(getView(),currentCrawler != null && currentAddress.equals(currentCrawler.getLastAddress()));
             }
         }
     }
@@ -275,4 +338,6 @@ public class WelcomeFragment extends Fragment
     private static final String CRAWLER = "CRAWLER";
     public static final String PUB_ADDRESS = "PUB_ADDRESS";
     private static final String CURRENT_ADDRESS = "CURRENT_ADDRESS" ;
+    private static final String LAST_LOCATION = "LAST_LOCATION";
+    private static final int CRAWLER_LOADER = 0;
 }
