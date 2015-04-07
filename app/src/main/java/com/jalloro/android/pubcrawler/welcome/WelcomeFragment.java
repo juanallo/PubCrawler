@@ -25,18 +25,19 @@ import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.LocationListener;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
-import com.jalloro.android.pubcrawler.near.WhatIsHotActivity;
 import com.jalloro.android.pubcrawler.R;
 import com.jalloro.android.pubcrawler.detail.PubDetailActivity;
 import com.jalloro.android.pubcrawler.detail.PubDetailFragment;
+import com.jalloro.android.pubcrawler.helpers.GoogleConnectionApiClientListener;
 import com.jalloro.android.pubcrawler.helpers.PlayServicesHelper;
 import com.jalloro.android.pubcrawler.model.Crawler;
 import com.jalloro.android.pubcrawler.model.SimplifiedLocation;
+import com.jalloro.android.pubcrawler.near.WhatIsHotActivity;
 
 import java.util.Map;
 
 public class WelcomeFragment extends Fragment
-        implements GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, LocationListener
+        implements GoogleConnectionApiClientListener, LocationListener
 {
 
     private GoogleApiClient googleApiClient;
@@ -47,24 +48,19 @@ public class WelcomeFragment extends Fragment
     private Firebase userInfo;
     private Crawler currentCrawler;
 
-
-    public WelcomeFragment() {
-    }
-
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
 
         final View rootView = inflater.inflate(R.layout.fragment_welcome_checkin, container, false);
-        final ImageButton checkInButton = (ImageButton)rootView.findViewById(R.id.checkinButton);
 
         if(savedInstanceState!= null){
             currentCrawler = savedInstanceState.getParcelable(CRAWLER);
             currentAddress = savedInstanceState.getString(CURRENT_ADDRESS);
         }
         else {
-            final String androidId = Settings.Secure.getString(getActivity().getContentResolver(),
-                    Settings.Secure.ANDROID_ID);
+            //TODO this should be returned by contentProvided
+            final String androidId = Settings.Secure.getString(getActivity().getContentResolver(), Settings.Secure.ANDROID_ID);
             //first time, creating default crawler;
             currentCrawler = new Crawler(androidId, Crawler.Gender.UNDEFINED);
         }
@@ -73,38 +69,8 @@ public class WelcomeFragment extends Fragment
             //setting Firebase
             Firebase.setAndroidContext(getActivity());
 
-            userInfo = new Firebase("https://boiling-fire-4188.firebaseio.com/crawlers/" + currentCrawler.getUserId());
-
-            userInfo.addListenerForSingleValueEvent(new ValueEventListener(){
-                @Override
-                public void onDataChange(DataSnapshot dataSnapshot) {
-                    if(dataSnapshot.getValue()!= null){
-                        Map<String, Object> crawlerInfo = (Map<String, Object>) dataSnapshot.getValue();
-                        currentCrawler.setLastAddress((String)crawlerInfo.get("lastAddress"));
-                        currentCrawler.setFacebookId((String) crawlerInfo.get("facebookId"));
-                        if(crawlerInfo.containsKey("checkInTimeStamp")){
-                           currentCrawler.setCheckInTimeStamp(Long.parseLong(crawlerInfo.get("checkInTimeStamp").toString()));
-                        }
-                        if(crawlerInfo.containsKey("lastLocation")){
-                            Map<String, Object> locationInfo = (Map<String, Object>) crawlerInfo.get("lastLocation");
-                            currentCrawler.setLastLocation(new SimplifiedLocation((double) locationInfo.get("latitude"),(double)locationInfo.get("longitude")));
-                        }
-                        currentCrawler.setGender(Crawler.Gender.valueOf((String) crawlerInfo.get("gender")));
-                        updateChecked(getView(), currentCrawler.isCheckedIn(currentAddress));
-                    }
-                }
-
-                @Override
-                public void onCancelled(FirebaseError firebaseError) {
-                    Log.e(LOG_CAT, firebaseError.getMessage());
-                }
-            });
-
-            //creating the service addressReceiver.
-            addressReceiver = new AddressResultReceiver(new Handler());
-
             //creating Google Api for location
-            buildGoogleApiClient();
+            googleApiClient = PlayServicesHelper.createGoogleApiClient(this.getActivity(), this);
 
             //creating a location request
             locationRequest = PlayServicesHelper.createLocationRequest(10000, 50000, LocationRequest.PRIORITY_HIGH_ACCURACY);
@@ -112,59 +78,21 @@ public class WelcomeFragment extends Fragment
             //connecting to google api
             googleApiClient.connect();
 
-            checkInButton.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    if(!currentCrawler.isCheckedIn(currentAddress)){
-                        if(lastLocation != null){
-                            currentCrawler.checkIn(new SimplifiedLocation(lastLocation.getLatitude(), lastLocation.getLongitude()), currentAddress);
-                            userInfo.setValue(currentCrawler);
-                            updateChecked(rootView, true);
-
-                            Handler handler = new Handler();
-                            handler.postDelayed(new Runnable() {
-                                @Override
-                                public void run() {
-                                    openDetails();
-                                }
-                            }, DETAIL_DELAY);
-                        }
-                        else {
-                            //TODO add toast indicating that the location is not there.
-                        }
-
-                    }
-                }
-            });
-
-            final Button viewDetails = (Button)rootView.findViewById(R.id.open_details);
-            viewDetails.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    openDetails();
-                }
-            });
-
-            Button whatIsHot = (Button) rootView.findViewById(R.id.what_is_hot);
-            whatIsHot.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    if(lastLocation != null){
-                        Intent intent = new Intent(getActivity(), WhatIsHotActivity.class);
-                        //current and pub location are the same
-                        intent.putExtra(PubDetailFragment.CURRENT_LOCATION, new SimplifiedLocation(lastLocation.getLatitude(), lastLocation.getLongitude()));
-                        intent.putExtra(PUB_ADDRESS,currentCrawler.getLastAddress());
-                        intent.putExtra(PubDetailFragment.PUB_LOCATION,currentCrawler.getLastLocation());
-                        startActivity(intent);
-                    }
-                }
-            });
         }
         else {
-           checkInButton.setEnabled(false);
+            disabledUi(rootView);
         }
 
         return rootView;
+    }
+
+    private void disabledUi(View rootView) {
+        final ImageButton checkInButton = (ImageButton)rootView.findViewById(R.id.checkinButton);
+        Button whatIsHot = (Button) rootView.findViewById(R.id.what_is_hot);
+        final Button viewDetails = (Button)rootView.findViewById(R.id.open_details);
+        whatIsHot.setVisibility(View.GONE);
+        checkInButton.setEnabled(false);
+        viewDetails.setVisibility(View.GONE);
     }
 
     private void openDetails() {
@@ -185,7 +113,85 @@ public class WelcomeFragment extends Fragment
 
     @Override
     public void onConnected(Bundle bundle) {
-        PlayServicesHelper.startLocationUpdates(googleApiClient, locationRequest, this);
+        lastLocation =  LocationServices.FusedLocationApi.getLastLocation(googleApiClient);
+        startFetchAddressService();
+
+        final View rootView = getView();
+        if(lastLocation != null && rootView != null){
+
+            updateChecked(rootView, currentCrawler.isCheckedIn(lastLocation));
+
+            userInfo = new Firebase("https://boiling-fire-4188.firebaseio.com/crawlers/" + currentCrawler.getUserId());
+            //TODO remove this should be managed by the contentProvider
+            userInfo.addListenerForSingleValueEvent(new ValueEventListener(){
+                @Override
+                public void onDataChange(DataSnapshot dataSnapshot) {
+                    if(dataSnapshot.getValue()!= null){
+                        Map<String, Object> crawlerInfo = (Map<String, Object>) dataSnapshot.getValue();
+                        currentCrawler.setLastAddress((String)crawlerInfo.get("lastAddress"));
+                        currentCrawler.setFacebookId((String) crawlerInfo.get("facebookId"));
+                        if(crawlerInfo.containsKey("checkInTimeStamp")){
+                            currentCrawler.setCheckInTimeStamp(Long.parseLong(crawlerInfo.get("checkInTimeStamp").toString()));
+                        }
+                        if(crawlerInfo.containsKey("lastLocation")){
+                            Map<String, Object> locationInfo = (Map<String, Object>) crawlerInfo.get("lastLocation");
+                            currentCrawler.setLastLocation(new SimplifiedLocation((double) locationInfo.get("latitude"),(double)locationInfo.get("longitude")));
+                        }
+                        currentCrawler.setGender(Crawler.Gender.valueOf((String) crawlerInfo.get("gender")));
+                        updateChecked(rootView, currentCrawler.isCheckedIn(lastLocation));
+                    }
+                }
+
+                @Override
+                public void onCancelled(FirebaseError firebaseError) {
+                    Log.e(LOG_CAT, firebaseError.getMessage());
+                }
+            });
+
+            final ImageButton checkInButton = (ImageButton) rootView.findViewById(R.id.checkinButton);
+            checkInButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    if(!currentCrawler.isCheckedIn(lastLocation)){
+
+                        currentCrawler.checkIn(new SimplifiedLocation(lastLocation.getLatitude(), lastLocation.getLongitude()), currentAddress);
+                        userInfo.setValue(currentCrawler);
+                        updateChecked(rootView, true);
+
+                        openDetails();
+                    }
+                }
+            });
+
+            final Button viewDetails = (Button) rootView.findViewById(R.id.open_details);
+            viewDetails.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    openDetails();
+                }
+            });
+
+            Button whatIsHot = (Button) rootView.findViewById(R.id.what_is_hot);
+            whatIsHot.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    Intent intent = new Intent(getActivity(), WhatIsHotActivity.class);
+                    //current and pub location are the same
+                    intent.putExtra(PubDetailFragment.CURRENT_LOCATION, new SimplifiedLocation(lastLocation.getLatitude(), lastLocation.getLongitude()));
+                    intent.putExtra(PUB_ADDRESS,currentCrawler.getLastAddress());
+                    intent.putExtra(PubDetailFragment.PUB_LOCATION,currentCrawler.getLastLocation());
+                    startActivity(intent);
+                }
+            });
+            PlayServicesHelper.startLocationUpdates(googleApiClient, locationRequest, this);
+        }
+        else {
+            //TODO add toast if root view is null
+            if(rootView != null){
+                //TODO add toast indicating that the location is not there.
+                disabledUi(rootView);
+            }
+        }
     }
 
     @Override
@@ -200,8 +206,10 @@ public class WelcomeFragment extends Fragment
 
     @Override
     public void onLocationChanged(Location location) {
-        lastLocation = location;
-        startIntentService();
+        if(PlayServicesHelper.distance(lastLocation, location) > Crawler.GEO_DISTANCE){
+            lastLocation = location;
+            startFetchAddressService();
+        }
     }
 
     @Override
@@ -220,14 +228,6 @@ public class WelcomeFragment extends Fragment
         }
     }
 
-    private synchronized void buildGoogleApiClient() {
-        googleApiClient = new GoogleApiClient.Builder(this.getActivity())
-                .addConnectionCallbacks(this)
-                .addOnConnectionFailedListener(this)
-                .addApi(LocationServices.API)
-                .build();
-    }
-
     private void updateChecked(@NonNull final View view, final boolean checkedIn) {
         TextView checkInText = (TextView)view.findViewById(R.id.checkInText);
         final ImageButton checkInButton = (ImageButton)view.findViewById(R.id.checkinButton);
@@ -244,14 +244,16 @@ public class WelcomeFragment extends Fragment
         }
     }
 
-    private void startIntentService() {
+    private void startFetchAddressService() {
+        if(addressReceiver == null){
+            //creating the service addressReceiver.
+            addressReceiver = new AddressResultReceiver(new Handler());
+        }
         Intent intent = new Intent(getActivity(), FetchAddressIntentService.class);
         intent.putExtra(FetchAddressIntentService.Constants.RECEIVER, addressReceiver);
         intent.putExtra(FetchAddressIntentService.Constants.LOCATION_DATA_EXTRA, lastLocation);
         getActivity().startService(intent);
     }
-
-
 
     class AddressResultReceiver extends ResultReceiver {
         public AddressResultReceiver(Handler handler) {
@@ -269,35 +271,8 @@ public class WelcomeFragment extends Fragment
         }
     }
 
-//    public void createTestUsers(){
-//        final Firebase firebase = new Firebase("https://boiling-fire-4188.firebaseio.com/crawlers");
-//        String address = "760 Mission Court\nFremont, California 94539";
-//        Map<String, Crawler> crawlers = new HashMap<String, Crawler>();
-//        crawlers.put(currentCrawler.getUserId(), currentCrawler);
-//        for(int i = 0 ; i <100; i++){
-//            Crawler crawler = new Crawler(UUID.randomUUID().toString(), Crawler.Gender.UNDEFINED);
-//            crawler.checkIn(new SimplifiedLocation(37.489933, -121.930999), address);
-//            crawlers.put(crawler.getUserId(),crawler);
-//        }
-//        address = "722 Edgewater Blvd\nFoster City, California 94404";
-//        for(int i = 0 ; i <100; i++){
-//            Crawler crawler = new Crawler(UUID.randomUUID().toString(), Crawler.Gender.UNDEFINED);
-//            crawler.checkIn(new SimplifiedLocation(37.5535048, -122.2743742), address);
-//            crawlers.put(crawler.getUserId(),crawler);
-//        }
-//        address = "744 Edgewater Blvd\nFoster City, California 94404";
-//        for(int i = 0 ; i <100; i++){
-//            Crawler crawler = new Crawler(UUID.randomUUID().toString(), Crawler.Gender.UNDEFINED);
-//            crawler.checkIn(new SimplifiedLocation(37.552946, -122.274577), address);
-//            crawlers.put(crawler.getUserId(),crawler);
-//        }
-//        firebase.setValue(crawlers);
-//    }
-
     private final static String LOG_CAT = WelcomeFragment.class.getName();
     private static final String CRAWLER = "CRAWLER";
     public static final String PUB_ADDRESS = "PUB_ADDRESS";
-    private static final int DETAIL_DELAY = 1000;
     private static final String CURRENT_ADDRESS = "CURRENT_ADDRESS" ;
-
 }

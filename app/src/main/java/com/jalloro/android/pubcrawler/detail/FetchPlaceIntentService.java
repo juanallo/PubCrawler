@@ -7,6 +7,7 @@ import android.os.Bundle;
 import android.os.ResultReceiver;
 import android.util.Log;
 
+import com.jalloro.android.pubcrawler.helpers.PlayServicesHelper;
 import com.jalloro.android.pubcrawler.model.PriceRange;
 import com.jalloro.android.pubcrawler.model.SimplifiedLocation;
 import com.jalloro.android.pubcrawler.welcome.FetchAddressIntentService;
@@ -72,7 +73,7 @@ public class FetchPlaceIntentService extends IntentService {
         double nearestDistance = 0;
         AddressInfo addressMatch = null;
         for (AddressInfo addressInfo : addresses){
-            final double distance = distance(location, addressInfo.getLocation());
+            final double distance = PlayServicesHelper.distance(location, addressInfo.getLocation());
             if(nearest == null || distance < nearestDistance){
                 if(nearest == null || !nearest.isVerified() || nearest.isVerified() && addressInfo.isVerified()){
                     nearest = addressInfo;
@@ -186,26 +187,7 @@ public class FetchPlaceIntentService extends IntentService {
         return placeInfo;
     }
 
-    /** calculates the distance between two locations in MILES */
-    private double distance(SimplifiedLocation currentLocation, SimplifiedLocation place) {
 
-        double earthRadius = 3958.75; // in miles, change to 6371 for kilometer output
-
-        double dLat = Math.toRadians(place.getLatitude()-currentLocation.getLatitude());
-        double dLng = Math.toRadians(place.getLongitude()-currentLocation.getLongitude());
-
-        double sindLat = Math.sin(dLat / 2);
-        double sindLng = Math.sin(dLng / 2);
-
-        double a = Math.pow(sindLat, 2) + Math.pow(sindLng, 2)
-                * Math.cos(Math.toRadians(currentLocation.getLatitude())) * Math.cos(Math.toRadians(place.getLatitude()));
-
-        double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-
-        double dist = earthRadius * c;
-
-        return dist; // output distance, in MILES
-    }
 
     private void deliverResultToReceiver(int resultCode, AddressInfo addressInfo) {
         Bundle bundle = new Bundle();

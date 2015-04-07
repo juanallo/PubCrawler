@@ -2,6 +2,8 @@ package com.jalloro.android.pubcrawler.helpers;
 
 import android.app.Activity;
 import android.app.Dialog;
+import android.content.Context;
+import android.location.Location;
 import android.support.annotation.NonNull;
 import android.util.Log;
 
@@ -11,6 +13,7 @@ import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.LocationListener;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
+import com.jalloro.android.pubcrawler.model.SimplifiedLocation;
 
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
@@ -26,6 +29,14 @@ import java.io.IOException;
 import java.io.InputStream;
 
 public class PlayServicesHelper {
+
+    public static  synchronized GoogleApiClient createGoogleApiClient(Context context, GoogleConnectionApiClientListener listener) {
+        return new GoogleApiClient.Builder(context)
+                .addConnectionCallbacks(listener)
+                .addOnConnectionFailedListener(listener)
+                .addApi(LocationServices.API)
+                .build();
+    }
 
     public static boolean isGooglePlayInstalled(Activity activity)
     {
@@ -137,6 +148,31 @@ public class PlayServicesHelper {
             e.printStackTrace();
         }
         return null;
+    }
+
+    public static double distance(@NonNull final SimplifiedLocation from, @NonNull final SimplifiedLocation to) {
+        return distance(from.getLatitude(), from.getLongitude(), to.getLatitude(), to.getLongitude());
+    }
+
+    public static double distance(@NonNull final Location from, @NonNull final Location to) {
+        return distance(from.getLatitude(), from.getLongitude(), to.getLatitude(), to.getLongitude());
+    }
+
+    private static double distance(final double fromLatitude, final double fromLongitude, final double toLatitude, final double toLongitude){
+        double earthRadius = 3958.75; // in miles, change to 6371 for kilometer output
+
+        double dLat = Math.toRadians(toLatitude-fromLatitude);
+        double dLng = Math.toRadians(toLongitude-fromLongitude);
+
+        double sindLat = Math.sin(dLat / 2);
+        double sindLng = Math.sin(dLng / 2);
+
+        double a = Math.pow(sindLat, 2) + Math.pow(sindLng, 2)
+                * Math.cos(Math.toRadians(fromLatitude)) * Math.cos(Math.toRadians(toLatitude));
+
+        double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+
+        return earthRadius * c;
     }
 
 }

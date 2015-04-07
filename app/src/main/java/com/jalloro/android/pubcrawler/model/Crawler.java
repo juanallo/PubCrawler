@@ -1,9 +1,11 @@
 package com.jalloro.android.pubcrawler.model;
 
+import android.location.Location;
 import android.os.Parcel;
 import android.os.Parcelable;
 import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
+
+import com.jalloro.android.pubcrawler.helpers.PlayServicesHelper;
 
 public class Crawler implements Parcelable {
 
@@ -95,8 +97,9 @@ public class Crawler implements Parcelable {
         this.gender = gender;
     }
 
-    public boolean isCheckedIn(@Nullable final String newLocationAddress){
-        return lastAddress != null && lastAddress.equals(newLocationAddress);
+    public boolean isCheckedIn(@NonNull final Location location){
+        final SimplifiedLocation to = new SimplifiedLocation(location.getLatitude(), location.getLongitude());
+        return lastLocation != null && PlayServicesHelper.distance(lastLocation, to) < GEO_DISTANCE;
     }
 
     public void checkIn(@NonNull final SimplifiedLocation location, @NonNull final String address){
@@ -142,5 +145,7 @@ public class Crawler implements Parcelable {
             return new Crawler[size];
         }
     };
+
+    public static final double GEO_DISTANCE = 0.012;
 
 }
