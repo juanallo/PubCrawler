@@ -20,7 +20,7 @@ import com.jalloro.android.pubcrawler.chart.Bar;
 import com.jalloro.android.pubcrawler.chart.BarChart;
 import com.jalloro.android.pubcrawler.model.Place;
 import com.jalloro.android.pubcrawler.model.SimplifiedLocation;
-import com.jalloro.android.pubcrawler.welcome.WelcomeFragment;
+import com.jalloro.android.pubcrawler.welcome.CheckInFragment;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -43,7 +43,7 @@ public class PubDetailFragment extends Fragment {
 
         Intent intent = getActivity().getIntent();
 
-        final String address = intent.getStringExtra(WelcomeFragment.PUB_ADDRESS);
+        final String address = intent.getStringExtra(CheckInFragment.PUB_ADDRESS);
 
         currentLocation = intent.getParcelableExtra(CURRENT_LOCATION);
 

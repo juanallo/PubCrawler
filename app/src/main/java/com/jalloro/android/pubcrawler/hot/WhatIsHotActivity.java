@@ -1,4 +1,4 @@
-package com.jalloro.android.pubcrawler.near;
+package com.jalloro.android.pubcrawler.hot;
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -20,7 +20,7 @@ import com.jalloro.android.pubcrawler.R;
 import com.jalloro.android.pubcrawler.detail.PubDetailActivity;
 import com.jalloro.android.pubcrawler.detail.PubDetailFragment;
 import com.jalloro.android.pubcrawler.model.SimplifiedLocation;
-import com.jalloro.android.pubcrawler.welcome.WelcomeFragment;
+import com.jalloro.android.pubcrawler.welcome.CheckInFragment;
 
 import java.util.Map;
 
@@ -39,7 +39,7 @@ public class WhatIsHotActivity extends ActionBarActivity implements GoogleMap.On
 
         currentLocation = getIntent().getParcelableExtra(PubDetailFragment.CURRENT_LOCATION);
         crawlerLocation = getIntent().getParcelableExtra(PubDetailFragment.PUB_LOCATION);
-        crawlerAddress = getIntent().getStringExtra(WelcomeFragment.PUB_ADDRESS);
+        crawlerAddress = getIntent().getStringExtra(CheckInFragment.PUB_ADDRESS);
 
 
         Firebase.setAndroidContext(this);
@@ -129,7 +129,7 @@ public class WhatIsHotActivity extends ActionBarActivity implements GoogleMap.On
 
     private void openDetails(SimplifiedLocation currentLocation, SimplifiedLocation pubLocation, String pubAddress) {
         Intent intent = new Intent(this, PubDetailActivity.class);
-        intent.putExtra(WelcomeFragment.PUB_ADDRESS, pubAddress);
+        intent.putExtra(CheckInFragment.PUB_ADDRESS, pubAddress);
         //current and pub location are the same
         intent.putExtra(PubDetailFragment.PUB_LOCATION, pubLocation);
         intent.putExtra(PubDetailFragment.CURRENT_LOCATION, currentLocation);

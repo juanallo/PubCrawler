@@ -16,7 +16,7 @@
         android:label="@string/app_name"
         android:theme="@style/AppTheme" >
         <activity
-            android:name=".welcome.welcomeActivity"
+            android:name=".welcome.CheckInActivity"
             android:label="@string/app_name"
             android:screenOrientation="portrait"
             android:theme="@style/noBarTheme" >
@@ -29,7 +29,7 @@
         <activity
             android:name=".detail.PubDetailActivity"
             android:label="@string/pub_details"
-            android:parentActivityName=".welcome.welcomeActivity" />
+            android:parentActivityName=".welcome.CheckInActivity" />
 
         <meta-data
             android:name="com.google.android.gms.version"
@@ -37,7 +37,7 @@
 
         <provider
             android:authorities="@string/content_authority"
-            android:name=".content.PubProvider"
+            android:name=".data.PubProvider"
             android:exported="false"
             android:syncable="true" />
 
@@ -53,9 +53,9 @@
             android:value="@string/google_maps_key" />
 
         <activity
-            android:name=".near.WhatIsHotActivity"
+            android:name=".hot.WhatIsHotActivity"
             android:label="@string/what_is_hot"
-            android:parentActivityName=".welcome.welcomeActivity">
+            android:parentActivityName=".welcome.CheckInActivity">
         </activity>
     </application>
 

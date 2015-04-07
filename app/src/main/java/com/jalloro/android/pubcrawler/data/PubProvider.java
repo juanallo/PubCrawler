@@ -1,4 +1,4 @@
-package com.jalloro.android.pubcrawler.content;
+package com.jalloro.android.pubcrawler.data;
 
 import android.annotation.TargetApi;
 import android.content.ContentProvider;

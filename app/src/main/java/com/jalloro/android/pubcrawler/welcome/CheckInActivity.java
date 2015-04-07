@@ -8,15 +8,15 @@ import android.view.MenuItem;
 import com.jalloro.android.pubcrawler.R;
 
 
-public class welcomeActivity extends ActionBarActivity {
+public class CheckInActivity extends ActionBarActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_welcome_checkin);
+        setContentView(R.layout.activity_checkin);
         if (savedInstanceState == null) {
             getSupportFragmentManager().beginTransaction()
-                    .add(R.id.container, new WelcomeFragment())
+                    .add(R.id.container, new CheckInFragment())
                     .commit();
         }
     }

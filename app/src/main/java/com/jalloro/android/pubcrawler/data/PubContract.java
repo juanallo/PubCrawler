@@ -1,4 +1,4 @@
-package com.jalloro.android.pubcrawler.content;
+package com.jalloro.android.pubcrawler.data;
 
 import android.content.ContentResolver;
 import android.content.ContentUris;

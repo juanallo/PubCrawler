@@ -28,16 +28,16 @@ import com.google.android.gms.location.LocationListener;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
 import com.jalloro.android.pubcrawler.R;
-import com.jalloro.android.pubcrawler.content.PubContract;
+import com.jalloro.android.pubcrawler.data.PubContract;
 import com.jalloro.android.pubcrawler.detail.PubDetailActivity;
 import com.jalloro.android.pubcrawler.detail.PubDetailFragment;
 import com.jalloro.android.pubcrawler.helpers.GoogleConnectionApiClientListener;
 import com.jalloro.android.pubcrawler.helpers.PlayServicesHelper;
 import com.jalloro.android.pubcrawler.model.Crawler;
 import com.jalloro.android.pubcrawler.model.SimplifiedLocation;
-import com.jalloro.android.pubcrawler.near.WhatIsHotActivity;
+import com.jalloro.android.pubcrawler.hot.WhatIsHotActivity;
 
-public class WelcomeFragment extends Fragment
+public class CheckInFragment extends Fragment
         implements GoogleConnectionApiClientListener, LocationListener, LoaderManager.LoaderCallbacks<Cursor>
 {
     private GoogleApiClient googleApiClient;
@@ -208,7 +208,7 @@ public class WelcomeFragment extends Fragment
     public void onLocationChanged(Location location) {
         final double distance = PlayServicesHelper.distance(lastLocation, location);
         if(distance > Crawler.GEO_DISTANCE){
-            Log.d(LOG_CAT, "Distance between old and new location:" + distance);
+            Log.i(LOG_CAT, "Distance between old and new location:" + distance);
             lastLocation = location;
             fetchAddress();
         }
@@ -217,7 +217,7 @@ public class WelcomeFragment extends Fragment
     @Override
     public void onPause() {
         super.onPause();
-        if(googleApiClient != null){
+        if(googleApiClient != null && googleApiClient.isConnected()){
             PlayServicesHelper.stopLocationUpdates(googleApiClient, this);
         }
     }
@@ -334,7 +334,7 @@ public class WelcomeFragment extends Fragment
         }
     }
 
-    private final static String LOG_CAT = WelcomeFragment.class.getName();
+    private final static String LOG_CAT = CheckInFragment.class.getName();
     private static final String CRAWLER = "CRAWLER";
     public static final String PUB_ADDRESS = "PUB_ADDRESS";
     private static final String CURRENT_ADDRESS = "CURRENT_ADDRESS" ;
