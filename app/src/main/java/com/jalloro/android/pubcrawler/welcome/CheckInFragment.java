@@ -52,7 +52,7 @@ public class CheckInFragment extends Fragment
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
 
-        final View rootView = inflater.inflate(R.layout.fragment_welcome_checkin, container, false);
+        final View rootView = inflater.inflate(R.layout.fragment_checkin, container, false);
 
         if(savedInstanceState!= null){
             currentCrawler = savedInstanceState.getParcelable(CRAWLER);
@@ -63,6 +63,8 @@ public class CheckInFragment extends Fragment
             final TextView checkInText = (TextView)rootView.findViewById(R.id.checkInText);
             final ImageButton checkInButton = (ImageButton)rootView.findViewById(R.id.checkinButton);
             final Button whatIsHot = (Button) rootView.findViewById(R.id.what_is_hot);
+            final TextView viewDetails = (TextView)rootView.findViewById(R.id.open_details);
+            viewDetails.setVisibility(View.GONE);
             checkInText.setVisibility(View.GONE);
             checkInButton.setVisibility(View.GONE);
             whatIsHot.setVisibility(View.GONE);
@@ -234,19 +236,19 @@ public class CheckInFragment extends Fragment
         final TextView checkInText = (TextView)view.findViewById(R.id.checkInText);
         final ImageButton checkInButton = (ImageButton)view.findViewById(R.id.checkinButton);
         final Button whatIsHot = (Button) view.findViewById(R.id.what_is_hot);
+        final TextView viewDetails = (TextView)view.findViewById(R.id.open_details);
         checkInText.setVisibility(View.VISIBLE);
         checkInButton.setVisibility(View.VISIBLE);
         whatIsHot.setVisibility(View.VISIBLE);
         if(checkedIn){
             checkInText.setText(R.string.checked_in);
             checkInButton.setBackground(view.getResources().getDrawable(R.drawable.checked_in_button));
-
-            final TextView viewDetails = (TextView)view.findViewById(R.id.open_details);
             viewDetails.setVisibility(View.VISIBLE);
         }
         else {
             checkInText.setText(R.string.checkIn);
             checkInButton.setBackground(view.getResources().getDrawable(R.drawable.checkin_button));
+            viewDetails.setVisibility(View.GONE);
         }
     }
 

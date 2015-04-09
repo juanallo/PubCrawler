@@ -1,10 +1,7 @@
-package com.jalloro.android.pubcrawler.detail;
+package com.jalloro.android.pubcrawler.model;
 
 import android.os.Parcel;
 import android.os.Parcelable;
-
-import com.jalloro.android.pubcrawler.model.PriceRange;
-import com.jalloro.android.pubcrawler.model.SimplifiedLocation;
 
 public class AddressInfo implements Parcelable {
 

@@ -8,6 +8,7 @@ import android.os.ResultReceiver;
 import android.util.Log;
 
 import com.jalloro.android.pubcrawler.helpers.PlayServicesHelper;
+import com.jalloro.android.pubcrawler.model.AddressInfo;
 import com.jalloro.android.pubcrawler.model.PriceRange;
 import com.jalloro.android.pubcrawler.model.SimplifiedLocation;
 import com.jalloro.android.pubcrawler.welcome.FetchAddressIntentService;

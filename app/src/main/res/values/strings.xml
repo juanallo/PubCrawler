@@ -13,7 +13,7 @@
     <string name="findingAddressError">We are having a Hard time finding where you are at!!!</string>
     <string name="view_place">View Place Details</string>
     <string name="how_hot">How hot is this place?</string>
-    <string name="looking_place_details">Looking Place...</string>
+    <string name="looking_place_details">Loading Place...</string>
     <string name="title_activity_near">Places Nearby</string>
     <string name="what_is_hot">What\'s hot?</string>
     <string name="content_authority" translatable="false">com.jalloro.android.pubcrawler.app</string>
