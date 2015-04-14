@@ -16,10 +16,16 @@ public class PubProvider extends ContentProvider {
 
     static final int CURRENT = 100;
     static final int PUBS = 101;
+    static final int CURRENT_PUB = 102;
 
-    //first element in location
+    //first Crawler
     private static final String currentCrawlerLocation =
             PubContract.CrawlerLocation.TABLE_NAME;
+
+    //location.location_setting = ?
+    private static final String currentPubSelection =
+            PubContract.WhatIsHot.TABLE_NAME+
+                    "." + PubContract.WhatIsHot._ID + " = ? ";
 
 
     @Override
@@ -61,6 +67,21 @@ public class PubProvider extends ContentProvider {
                 );
                 break;
             }
+            case CURRENT_PUB:{
+                String pubAdddres = PubContract.WhatIsHot.getAdddressSettingFromUri(uri);
+                selection = currentPubSelection;
+                selectionArgs = new String[]{pubAdddres};
+                retCursor = pubDbHelper.getReadableDatabase().query(
+                        PubContract.WhatIsHot.TABLE_NAME,
+                        projection,
+                        selection,
+                        selectionArgs,
+                        null,
+                        null,
+                        sortOrder
+                );
+                break;
+            }
             default:
                 throw new UnsupportedOperationException("Unknown uri: " + uri);
         }
@@ -79,6 +100,8 @@ public class PubProvider extends ContentProvider {
                 return PubContract.CrawlerLocation.CONTENT_ITEM_TYPE;
             case PUBS:
                 return PubContract.WhatIsHot.CONTENT_TYPE;
+            case CURRENT_PUB:
+                return PubContract.WhatIsHot.CONTENT_ITEM_TYPE;
             default:
                 throw new UnsupportedOperationException("Unknown uri: " + uri);
         }
@@ -102,7 +125,7 @@ public class PubProvider extends ContentProvider {
             case PUBS: {
                 long _id = db.replace(PubContract.WhatIsHot.TABLE_NAME, null, values);
                 if ( _id > 0 )
-                    returnUri = PubContract.WhatIsHot.buildPubUri(_id);
+                    returnUri = PubContract.WhatIsHot.buildPubsUri(_id);
                 else
                     throw new android.database.SQLException("Failed to insert row into " + uri);
                 break;
@@ -170,6 +193,7 @@ public class PubProvider extends ContentProvider {
 
         // For each type of URI you want to add, create a corresponding code.
         matcher.addURI(authority, PubContract.PATH_WHAT_IS_HOT, PUBS);
+        matcher.addURI(authority, PubContract.PATH_WHAT_IS_HOT + "/*", CURRENT_PUB);
 
         matcher.addURI(authority, PubContract.PATH_LOCATION, CURRENT);
         return matcher;

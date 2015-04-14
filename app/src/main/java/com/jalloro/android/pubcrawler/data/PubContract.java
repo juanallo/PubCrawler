@@ -49,8 +49,6 @@ public class PubContract {
                 PubContract.CrawlerLocation.COLUMN_LAST_ADDRESS,
                 PubContract.CrawlerLocation.GENDER
         };
-
-
     }
 
     public static final class WhatIsHot implements BaseColumns {
@@ -66,6 +64,7 @@ public class PubContract {
         // Table name
         public static final String TABLE_NAME = PATH_WHAT_IS_HOT;
 
+        public static final String COLUMN_NAME = "name";
         public static final String COLUMN_PRICE = "price";
 
         public static final String COLUMN_COORD_LAT = "coord_lat";
@@ -79,9 +78,30 @@ public class PubContract {
 //        public static final String COLUMN_ACTUAL_WOMEN = "actual_women";
         public static final String COLUMN_ACTUAL_UNDEFINED = "actual_undefined";
 
-        public static Uri buildPubUri(long id) {
+        public static final String[] COLUMNS = {
+                TABLE_NAME + "." + _ID,
+                COLUMN_NAME,
+                COLUMN_PRICE,
+                COLUMN_COORD_LAT,
+                COLUMN_COORD_LONG,
+                COLUMN_PLANNED_UNDEFINED,
+                COLUMN_ACTUAL_UNDEFINED
+        };
+
+        public static Uri buildPubsUri(long id) {
             return ContentUris.withAppendedId(CONTENT_URI, id);
         }
 
+        public static Uri buildCurrentPubUri(String address) {
+            return CONTENT_URI.buildUpon().appendPath(address).build();
+        }
+
+//        public static Uri buildCurrentPubUri() {
+//            return CONTENT_URI;
+//        }
+
+        public static String getAdddressSettingFromUri(Uri uri) {
+            return uri.getPathSegments().get(1);
+        }
     }
 }

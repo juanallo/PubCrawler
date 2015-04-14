@@ -34,6 +34,7 @@ public class PubDbHelper extends SQLiteOpenHelper {
 
         final String SQL_CREATE_WEATHER_TABLE = "CREATE TABLE " + PubContract.WhatIsHot.TABLE_NAME + " (" +
                 PubContract.WhatIsHot._ID + " TEXT PRIMARY KEY," +
+                PubContract.WhatIsHot.COLUMN_NAME + " TEXT, " +
                 PubContract.WhatIsHot.COLUMN_PRICE + " TEXT, " +
                 PubContract.WhatIsHot.COLUMN_COORD_LAT + " REAL NOT NULL, " +
                 PubContract.WhatIsHot.COLUMN_COORD_LONG + " REAL NOT NULL, " +

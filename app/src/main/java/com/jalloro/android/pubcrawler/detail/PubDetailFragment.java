@@ -1,11 +1,15 @@
 package com.jalloro.android.pubcrawler.detail;
 
 import android.content.Intent;
+import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.ResultReceiver;
 import android.support.v4.app.Fragment;
+import android.support.v4.app.LoaderManager;
+import android.support.v4.content.CursorLoader;
+import android.support.v4.content.Loader;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -18,24 +22,21 @@ import com.firebase.client.ValueEventListener;
 import com.jalloro.android.pubcrawler.R;
 import com.jalloro.android.pubcrawler.chart.Bar;
 import com.jalloro.android.pubcrawler.chart.BarChart;
+import com.jalloro.android.pubcrawler.data.PubContract;
 import com.jalloro.android.pubcrawler.model.AddressInfo;
 import com.jalloro.android.pubcrawler.model.Place;
+import com.jalloro.android.pubcrawler.model.PriceRange;
 import com.jalloro.android.pubcrawler.model.SimplifiedLocation;
 import com.jalloro.android.pubcrawler.welcome.CheckInFragment;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class PubDetailFragment extends Fragment {
+public class PubDetailFragment extends Fragment implements LoaderManager.LoaderCallbacks<Cursor> {
 
     private Place currentPlace;
     private PlaceResultReceiver placeReceiver;
     private SimplifiedLocation currentLocation;
-    private Firebase placeDetailsDataBase;
-
-    public PubDetailFragment() {
-
-    }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -49,31 +50,10 @@ public class PubDetailFragment extends Fragment {
         currentLocation = intent.getParcelableExtra(CURRENT_LOCATION);
 
         final SimplifiedLocation pubLocation = intent.getParcelableExtra(PUB_LOCATION);
+
         currentPlace = new Place(pubLocation, address);
 
         placeReceiver = new PlaceResultReceiver(new Handler());
-
-        startIntentService();
-
-        final Firebase firebase = new Firebase("https://boiling-fire-4188.firebaseio.com/crawlers");
-        firebase.orderByChild("lastAddress").equalTo(address).addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                //TODO ADD WOMEN/MEN
-                //TODO CHECK TIMESTAMP
-                currentPlace.setRealAmountOfUndefined(dataSnapshot.getChildrenCount());
-                //TODO GET PLANNED
-                currentPlace.setPlannedAmountOfUndefined(dataSnapshot.getChildrenCount() + 30);
-                updateStatusChart(getView(), currentPlace);
-            }
-
-            @Override
-            public void onCancelled(FirebaseError firebaseError) {
-
-            }
-        });
-
-        placeDetailsDataBase = new Firebase("https://boiling-fire-4188.firebaseio.com/pubs/" + address.replace("\n", " "));
 
         return rootView;
     }
@@ -118,6 +98,82 @@ public class PubDetailFragment extends Fragment {
         getActivity().startService(intent);
     }
 
+    @Override
+    public Loader<Cursor> onCreateLoader(int id, Bundle args) {
+        Uri crawlerUri = PubContract.WhatIsHot.buildCurrentPubUri(currentPlace.getAddress());
+
+        return new CursorLoader(getActivity(),
+                crawlerUri,
+                PubContract.WhatIsHot.COLUMNS,
+                null,
+                null,
+                null);
+    }
+
+    @Override
+    public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
+        if (data.moveToFirst()){
+            final int nameIndex = data.getColumnIndex(PubContract.WhatIsHot.COLUMN_NAME);
+            if(!data.isNull(nameIndex)){
+                final String placeName = data.getString(nameIndex);
+                currentPlace.setName(placeName);
+                currentPlace.getLocation().setLatitude(data.getLong(data.getColumnIndex(PubContract.WhatIsHot.COLUMN_COORD_LAT)));
+                currentPlace.getLocation().setLongitude(data.getLong(data.getColumnIndex(PubContract.WhatIsHot.COLUMN_COORD_LONG)));
+                final String price = data.getString(data.getColumnIndex(PubContract.WhatIsHot.COLUMN_PRICE));
+                currentPlace.setPriceRange(PriceRange.valueOf(price));
+            }
+            else {
+                //no info on place so we need to fetch it.
+                startIntentService();
+            }
+            //let's look for checkIn data
+            final int actualIndex = data.getColumnIndex(PubContract.WhatIsHot.COLUMN_ACTUAL_UNDEFINED);
+            if(data.isNull(actualIndex)){
+                //adding db data and current checkIn
+                currentPlace.setRealAmountOfUndefined(data.getLong(actualIndex)+1);
+            }
+            final int plannedIndex = data.getColumnIndex(PubContract.WhatIsHot.COLUMN_PLANNED_UNDEFINED);
+            if(data.isNull(plannedIndex)){
+                currentPlace.setPlannedAmountOfUndefined(data.getLong(plannedIndex));
+            }
+
+            //TODO move to SYNC Service
+            final Firebase firebase = new Firebase("https://boiling-fire-4188.firebaseio.com/crawlers");
+            firebase.orderByChild("lastAddress").equalTo(currentPlace.getAddress()).addListenerForSingleValueEvent(new ValueEventListener() {
+                @Override
+                public void onDataChange(DataSnapshot dataSnapshot) {
+                    //TODO CHECK TIMESTAMP
+                    currentPlace.setRealAmountOfUndefined(dataSnapshot.getChildrenCount());
+                    //TODO GET PLANNED
+                    currentPlace.setPlannedAmountOfUndefined(dataSnapshot.getChildrenCount() + 30);
+                    updateStatusChart(getView(), currentPlace);
+                }
+
+                @Override
+                public void onCancelled(FirebaseError firebaseError) {
+
+                }
+            });
+
+            updateUi(getView(), currentPlace);
+        }
+        else {
+            //no info on place so we need to fetch it
+            startIntentService();
+        }
+    }
+
+    @Override
+    public void onLoaderReset(Loader<Cursor> loader) {
+        //nothing to do!
+    }
+
+    @Override
+    public void onActivityCreated(Bundle savedInstanceState) {
+        getLoaderManager().initLoader(PLACE_LOADER, null, this);
+        super.onActivityCreated(savedInstanceState);
+    }
+
     class PlaceResultReceiver extends ResultReceiver {
         public PlaceResultReceiver(Handler handler) {
             super(handler);
@@ -127,16 +183,9 @@ public class PubDetailFragment extends Fragment {
         public void onReceiveResult(int resultCode, Bundle resultData) {
 
             AddressInfo addressInfo = resultData.getParcelable(FetchPlaceIntentService.Constants.RESULT_DATA_KEY);
-
-            if (resultCode == FetchPlaceIntentService.Constants.SUCCESS_RESULT) {
-                currentPlace.setName(addressInfo.getName());
-                currentPlace.setPriceRange(addressInfo.getPriceRange());
-                placeDetailsDataBase.setValue(currentPlace);
-                updateUi(getView(), currentPlace);
-            }
-            else {
-               //TODO update UI with moon details!
-               // updateUi(getView(), addressInfo);
+            if (resultCode == FetchPlaceIntentService.Constants.FAILURE_RESULT) {
+                //TODO update UI with moon details!
+                // updateUi(getView(), addressInfo);
             }
         }
     }
@@ -146,4 +195,5 @@ public class PubDetailFragment extends Fragment {
     private static final String TO_LOCATION = "daddr";
     public static final String PUB_LOCATION = "PUB_LOCATION";
     public static final String CURRENT_LOCATION = "CURRENT_LOCATION";
+    private static final int PLACE_LOADER = 1;
 }

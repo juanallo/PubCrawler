@@ -1,12 +1,14 @@
 package com.jalloro.android.pubcrawler.detail;
 
 import android.app.IntentService;
+import android.content.ContentValues;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.ResultReceiver;
 import android.util.Log;
 
+import com.jalloro.android.pubcrawler.data.PubContract;
 import com.jalloro.android.pubcrawler.helpers.PlayServicesHelper;
 import com.jalloro.android.pubcrawler.model.AddressInfo;
 import com.jalloro.android.pubcrawler.model.PriceRange;
@@ -28,20 +30,8 @@ import java.util.List;
 
 public class FetchPlaceIntentService extends IntentService {
 
-    private static final String LOG_TAG = FetchPlaceIntentService.class.getName();
-    private static final String FOURSQUARE_BASE_URL = "https://api.foursquare.com/v2/venues/search";
-    private static final String LOCATION_PARAM = "ll";
-    private static final String CLIENT_PARAM = "client_id";
-    private static final String SECRET_PARAM = "client_secret";
-    private static final String CLIENT_ID = "QMUKHTYBO5WWETB1JPZUWXTEOG4JBF2ESFASQO11QFGURCE1";
-    private static final String CLIENT_SECRET = "XISM01N0H4CBHG3JSOPDKZSTEPPYAR41OW3UVDXQ4DO4LAFX";
-    private static final String VERSION_PARAM = "v";
-    private static final String VERSION_USED = "20140806";
     private ResultReceiver resultReceiver;
-    /**
-     * Creates an IntentService.  Invoked by your subclass's constructor.
-     *
-     */
+
     public FetchPlaceIntentService() {
         super(FetchAddressIntentService.class.getName());
     }
@@ -60,7 +50,7 @@ public class FetchPlaceIntentService extends IntentService {
             //send info to receiver.
             List<AddressInfo> addresses = getAddressesFromJson(placesJson);
             AddressInfo addressInfo = findNearestPlace(addresses, location, address);
-            deliverResultToReceiver(Constants.SUCCESS_RESULT, addressInfo);
+            saveAndDeliver(Constants.SUCCESS_RESULT, addressInfo, address);
         } catch (JSONException | FailToRetrievePlaceException e) {
             AddressInfo addressInfo = new AddressInfo(address,"Are you on the moon?", PriceRange.UNKNOWN, location);
            deliverResultToReceiver(Constants.FAILURE_RESULT,addressInfo);
@@ -190,6 +180,24 @@ public class FetchPlaceIntentService extends IntentService {
 
 
 
+    private void saveAndDeliver(int resultCode, AddressInfo addressInfo, String address){
+        // Defines an object to contain the new values to insert
+        ContentValues mNewValues = new ContentValues();
+
+        mNewValues.put(PubContract.WhatIsHot._ID,address);
+        mNewValues.put(PubContract.WhatIsHot.COLUMN_NAME, addressInfo.getName());
+        mNewValues.put(PubContract.WhatIsHot.COLUMN_PRICE, addressInfo.getPriceRange().name());
+        mNewValues.put(PubContract.WhatIsHot.COLUMN_COORD_LAT, addressInfo.getLocation().getLatitude());
+        mNewValues.put(PubContract.WhatIsHot.COLUMN_COORD_LONG, addressInfo.getLocation().getLongitude());
+
+        getContentResolver().insert(
+                PubContract.WhatIsHot.CONTENT_URI,
+                mNewValues
+        );
+
+        deliverResultToReceiver(resultCode, addressInfo);
+    }
+
     private void deliverResultToReceiver(int resultCode, AddressInfo addressInfo) {
         Bundle bundle = new Bundle();
         bundle.putParcelable(Constants.RESULT_DATA_KEY, addressInfo);
@@ -209,4 +217,14 @@ public class FetchPlaceIntentService extends IntentService {
         public static final String LOCATION_DATA_EXTRA = PACKAGE_NAME +
                 ".LOCATION_DATA_EXTRA";
     }
+
+    private static final String LOG_TAG = FetchPlaceIntentService.class.getName();
+    private static final String FOURSQUARE_BASE_URL = "https://api.foursquare.com/v2/venues/search";
+    private static final String LOCATION_PARAM = "ll";
+    private static final String CLIENT_PARAM = "client_id";
+    private static final String SECRET_PARAM = "client_secret";
+    private static final String CLIENT_ID = "QMUKHTYBO5WWETB1JPZUWXTEOG4JBF2ESFASQO11QFGURCE1";
+    private static final String CLIENT_SECRET = "XISM01N0H4CBHG3JSOPDKZSTEPPYAR41OW3UVDXQ4DO4LAFX";
+    private static final String VERSION_PARAM = "v";
+    private static final String VERSION_USED = "20140806";
 }
