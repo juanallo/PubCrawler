@@ -130,7 +130,8 @@ public class CheckInFragment extends Fragment
             checkInButton.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    if(!currentCrawler.isCheckedIn(lastLocation)){
+                    if(!currentCrawler.isCheckedIn(lastLocation) ||
+                            currentAddress != null && !currentAddress.equals(currentCrawler.getLastAddress())){
                         checkIn(rootView);
                     }
                 }

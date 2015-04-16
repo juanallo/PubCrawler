@@ -6,6 +6,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 
 import com.jalloro.android.pubcrawler.R;
+import com.jalloro.android.pubcrawler.sync.SyncAdapter;
 
 
 public class CheckInActivity extends ActionBarActivity {
@@ -19,6 +20,7 @@ public class CheckInActivity extends ActionBarActivity {
                     .add(R.id.container, new CheckInFragment())
                     .commit();
         }
+        SyncAdapter.initializeSyncAdapter(this);
     }
 
 

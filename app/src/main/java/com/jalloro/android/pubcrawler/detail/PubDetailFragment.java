@@ -137,23 +137,8 @@ public class PubDetailFragment extends Fragment implements LoaderManager.LoaderC
                 currentPlace.setPlannedAmountOfUndefined(data.getLong(plannedIndex));
             }
 
-            //TODO move to SYNC Service
-            final Firebase firebase = new Firebase("https://boiling-fire-4188.firebaseio.com/crawlers");
-            firebase.orderByChild("lastAddress").equalTo(currentPlace.getAddress()).addListenerForSingleValueEvent(new ValueEventListener() {
-                @Override
-                public void onDataChange(DataSnapshot dataSnapshot) {
-                    //TODO CHECK TIMESTAMP
-                    currentPlace.setRealAmountOfUndefined(dataSnapshot.getChildrenCount());
-                    //TODO GET PLANNED
-                    currentPlace.setPlannedAmountOfUndefined(dataSnapshot.getChildrenCount() + 30);
-                    updateStatusChart(getView(), currentPlace);
-                }
-
-                @Override
-                public void onCancelled(FirebaseError firebaseError) {
-
-                }
-            });
+            //looking for most updated number of crawlers.
+            updateAmountOfCrawlers();
 
             updateUi(getView(), currentPlace);
         }
@@ -161,6 +146,25 @@ public class PubDetailFragment extends Fragment implements LoaderManager.LoaderC
             //no info on place so we need to fetch it
             startIntentService();
         }
+    }
+
+    private void updateAmountOfCrawlers() {
+        final Firebase firebase = new Firebase("https://boiling-fire-4188.firebaseio.com/crawlers");
+        firebase.orderByChild("lastAddress").equalTo(currentPlace.getAddress()).addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                //TODO CHECK TIMESTAMP
+                currentPlace.setRealAmountOfUndefined(dataSnapshot.getChildrenCount());
+                //TODO GET PLANNED
+                currentPlace.setPlannedAmountOfUndefined(dataSnapshot.getChildrenCount() + 30);
+                updateStatusChart(getView(), currentPlace);
+            }
+
+            @Override
+            public void onCancelled(FirebaseError firebaseError) {
+
+            }
+        });
     }
 
     @Override
