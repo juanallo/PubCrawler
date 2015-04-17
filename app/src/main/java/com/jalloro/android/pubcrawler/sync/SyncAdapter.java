@@ -5,11 +5,16 @@ import android.accounts.AccountManager;
 import android.content.AbstractThreadedSyncAdapter;
 import android.content.ContentProviderClient;
 import android.content.ContentResolver;
+import android.content.ContentValues;
 import android.content.Context;
+import android.content.Intent;
 import android.content.SyncRequest;
 import android.content.SyncResult;
+import android.database.DatabaseUtils;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.ResultReceiver;
 import android.util.Log;
 
 import com.firebase.client.DataSnapshot;
@@ -17,7 +22,10 @@ import com.firebase.client.Firebase;
 import com.firebase.client.FirebaseError;
 import com.firebase.client.ValueEventListener;
 import com.jalloro.android.pubcrawler.R;
+import com.jalloro.android.pubcrawler.data.PubContract;
+import com.jalloro.android.pubcrawler.detail.FetchPlaceIntentService;
 import com.jalloro.android.pubcrawler.model.Place;
+import com.jalloro.android.pubcrawler.model.SimplifiedLocation;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -28,20 +36,14 @@ import java.util.Map;
  */
 public class SyncAdapter extends AbstractThreadedSyncAdapter {
 
-    // Global variables
-    // Define a variable to contain a content resolver instance
-    ContentResolver mContentResolver;
+    ContentResolver contentResolver;
 
     /**
      * Set up the sync adapter
      */
     public SyncAdapter(Context context, boolean autoInitialize) {
         super(context, autoInitialize);
-        /*
-         * If your app uses a content resolver, get an instance of it
-         * from the incoming Context
-         */
-        mContentResolver = context.getContentResolver();
+        contentResolver = context.getContentResolver();
     }
 
     /**
@@ -54,11 +56,7 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
             boolean autoInitialize,
             boolean allowParallelSyncs) {
         super(context, autoInitialize, allowParallelSyncs);
-        /*
-         * If your app uses a content resolver, get an instance of it
-         * from the incoming Context
-         */
-        mContentResolver = context.getContentResolver();
+        contentResolver = context.getContentResolver();
     }
 
     @Override
@@ -68,27 +66,62 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
             String authority,
             ContentProviderClient provider,
             SyncResult syncResult) {
-
+        Log.i(LOG_CAT, "Sync Called");
+        Firebase.setAndroidContext(getContext());
         final Firebase firebase = new Firebase("https://boiling-fire-4188.firebaseio.com/crawlers");
         firebase.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 Map<String, Place> places = new HashMap<>();
                 for (DataSnapshot pl : dataSnapshot.getChildren()){
-                    //final String address = pl.getV
-                    //if address in map
+                    Map<String, Object> newPlace = (Map<String, Object>) pl.getValue();
+                    final String address = newPlace.get("lastAddress").toString();
                     //TODO check timeStamp
-                    //add +1 to current amount
-                    //else
-                    //put address in map
+                    if(places.containsKey(address)){
+                        final Place place = places.get(address);
+                        place.addCrawler();
+                    }
+                    else {
+                        final Map<String, Object> lastLocation = (Map<String, Object>) newPlace.get("lastLocation");
+                        final double latitude = Double.parseDouble(lastLocation.get("latitude").toString());
+                        final double longitude = Double.parseDouble(lastLocation.get("longitude").toString());
+                        Place place = new Place(new SimplifiedLocation(latitude, longitude), address);
+                        place.addCrawler();
+                        places.put(address, place);
+                    }
                  }
                 for (Place place : places.values()){
-                    //check if address in DB
-                    //if exists
-                    //add # of users
-                    //else
-                    //fetch address
-                    //on result add # of users.
+                    // Defines an object to contain the new values to insert
+                    ContentValues mNewValues = new ContentValues();
+
+                    mNewValues.put(PubContract.WhatIsHot._ID, place.getAddress());
+                    mNewValues.put(PubContract.WhatIsHot.COLUMN_ACTUAL_UNDEFINED, place.getRealAmountOfUndefined());
+
+                    final String condition = PubContract.WhatIsHot._ID + " = " + DatabaseUtils.sqlEscapeString(place.getAddress());
+
+                    if(PubContract.existsValue(contentResolver, PubContract.WhatIsHot.CONTENT_URI, condition)){
+
+                        mNewValues.put(PubContract.WhatIsHot.COLUMN_COORD_LAT, place.getLocation().getLatitude());
+                        mNewValues.put(PubContract.WhatIsHot.COLUMN_COORD_LONG, place.getLocation().getLongitude());
+
+                        contentResolver.insert(
+                                PubContract.WhatIsHot.CONTENT_URI,
+                                mNewValues
+                        );
+                        Intent intent = new Intent(getContext(), FetchPlaceIntentService.class);
+                        intent.putExtra(FetchPlaceIntentService.Constants.RECEIVER, new ResultReceiver(new Handler()));
+                        intent.putExtra(FetchPlaceIntentService.Constants.ADDRESS_DATA_EXTRA, place.getAddress());
+                        intent.putExtra(FetchPlaceIntentService.Constants.LOCATION_DATA_EXTRA, place.getLocation());
+                        getContext().startService(intent);
+                    }
+                    else {
+                        contentResolver.update(
+                               PubContract.WhatIsHot.CONTENT_URI,
+                               mNewValues,
+                               condition,
+                               null
+                       );
+                    }
                 }
             }
 
@@ -130,40 +163,17 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
 
         // If the password doesn't exist, the account doesn't exist
         if ( null == accountManager.getPassword(newAccount) ) {
-
-        /*
-         * Add the account and account type, no password or user data
-         * If successful, return the Account object, otherwise report an error.
-         */
             if (!accountManager.addAccountExplicitly(newAccount, "", null)) {
                 return null;
             }
-            /*
-             * If you don't set android:syncable="true" in
-             * in your <provider> element in the manifest,
-             * then call ContentResolver.setIsSyncable(account, AUTHORITY, 1)
-             * here.
-             */
-
             onAccountCreated(newAccount, context);
         }
         return newAccount;
     }
 
     private static void onAccountCreated(Account newAccount, Context context) {
-        /*
-         * Since we've created an account
-         */
         SyncAdapter.configurePeriodicSync(context, SYNC_INTERVAL, SYNC_FLEXTIME);
-
-        /*
-         * Without calling setSyncAutomatically, our periodic sync will not be enabled.
-         */
         ContentResolver.setSyncAutomatically(newAccount, context.getString(R.string.content_authority), true);
-
-        /*
-         * Finally, let's do a sync to get things started
-         */
         syncImmediately(context);
     }
 
@@ -190,7 +200,7 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
         }
     }
 
-    public static final int SYNC_INTERVAL = 60 * 30;
+    public static final int SYNC_INTERVAL = 60;
     public static final int SYNC_FLEXTIME = SYNC_INTERVAL/3;
     public static final String LOG_CAT = SyncAdapter.class.getName();
 }

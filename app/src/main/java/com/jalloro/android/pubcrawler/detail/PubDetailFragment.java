@@ -2,6 +2,7 @@ package com.jalloro.android.pubcrawler.detail;
 
 import android.content.Intent;
 import android.database.Cursor;
+import android.database.DatabaseUtils;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
@@ -100,12 +101,20 @@ public class PubDetailFragment extends Fragment implements LoaderManager.LoaderC
 
     @Override
     public Loader<Cursor> onCreateLoader(int id, Bundle args) {
-        Uri crawlerUri = PubContract.WhatIsHot.buildCurrentPubUri(currentPlace.getAddress());
+//        Uri crawlerUri = PubContract.WhatIsHot.buildCurrentPubUri(currentPlace.getAddress());
+//
+//        return new CursorLoader(getActivity(),
+//                crawlerUri,
+//                PubContract.WhatIsHot.COLUMNS,
+//                null,
+//                null,
+//                null);
+        final String condition = PubContract.WhatIsHot._ID + " = " + DatabaseUtils.sqlEscapeString(currentPlace.getAddress());
 
         return new CursorLoader(getActivity(),
-                crawlerUri,
+                PubContract.WhatIsHot.CONTENT_URI,
                 PubContract.WhatIsHot.COLUMNS,
-                null,
+                condition,
                 null,
                 null);
     }

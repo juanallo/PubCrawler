@@ -3,6 +3,7 @@ package com.jalloro.android.pubcrawler.detail;
 import android.app.IntentService;
 import android.content.ContentValues;
 import android.content.Intent;
+import android.database.DatabaseUtils;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.ResultReceiver;
@@ -190,11 +191,22 @@ public class FetchPlaceIntentService extends IntentService {
         mNewValues.put(PubContract.WhatIsHot.COLUMN_COORD_LAT, addressInfo.getLocation().getLatitude());
         mNewValues.put(PubContract.WhatIsHot.COLUMN_COORD_LONG, addressInfo.getLocation().getLongitude());
 
-        getContentResolver().insert(
-                PubContract.WhatIsHot.CONTENT_URI,
-                mNewValues
-        );
+        final String condition = PubContract.WhatIsHot._ID + " = " + DatabaseUtils.sqlEscapeString(address);
 
+        if(PubContract.existsValue(getContentResolver(), PubContract.WhatIsHot.CONTENT_URI, condition)){
+            getContentResolver().update(
+                    PubContract.WhatIsHot.CONTENT_URI,
+                    mNewValues,
+                    condition,
+                    null
+            );
+        }
+        else {
+            getContentResolver().insert(
+                    PubContract.WhatIsHot.CONTENT_URI,
+                    mNewValues
+            );
+        }
         deliverResultToReceiver(resultCode, addressInfo);
     }
 

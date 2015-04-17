@@ -94,4 +94,8 @@ public class Place {
     public void setPriceRange(PriceRange priceRange) {
         this.priceRange = priceRange;
     }
+
+    public void addCrawler(){
+        this.plannedAmountOfUndefined += 1;
+    }
 }

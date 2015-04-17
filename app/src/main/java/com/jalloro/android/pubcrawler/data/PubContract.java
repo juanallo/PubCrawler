@@ -2,6 +2,7 @@ package com.jalloro.android.pubcrawler.data;
 
 import android.content.ContentResolver;
 import android.content.ContentUris;
+import android.database.Cursor;
 import android.net.Uri;
 import android.provider.BaseColumns;
 
@@ -103,5 +104,13 @@ public class PubContract {
         public static String getAdddressSettingFromUri(Uri uri) {
             return uri.getPathSegments().get(1);
         }
+    }
+
+    public static boolean existsValue(ContentResolver contentProvider, Uri contentUri, String condition){
+        Cursor c = contentProvider.query(contentUri,null,
+                condition, null, null);
+        final int rowsFound = c.getCount();
+        c.close();
+        return rowsFound > 0;
     }
 }
