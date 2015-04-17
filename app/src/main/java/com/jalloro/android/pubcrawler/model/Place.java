@@ -96,6 +96,6 @@ public class Place {
     }
 
     public void addCrawler(){
-        this.plannedAmountOfUndefined += 1;
+        this.realAmountOfUndefined += 1;
     }
 }

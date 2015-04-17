@@ -191,7 +191,7 @@ public class FetchPlaceIntentService extends IntentService {
         mNewValues.put(PubContract.WhatIsHot.COLUMN_COORD_LAT, addressInfo.getLocation().getLatitude());
         mNewValues.put(PubContract.WhatIsHot.COLUMN_COORD_LONG, addressInfo.getLocation().getLongitude());
 
-        final String condition = PubContract.WhatIsHot._ID + " = " + DatabaseUtils.sqlEscapeString(address);
+        final String condition = PubContract.WhatIsHot.HOT_ID + " = " + DatabaseUtils.sqlEscapeString(address);
 
         if(PubContract.existsValue(getContentResolver(), PubContract.WhatIsHot.CONTENT_URI, condition)){
             getContentResolver().update(

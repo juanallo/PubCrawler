@@ -32,7 +32,7 @@ public class PubDbHelper extends SQLiteOpenHelper {
                 PubContract.CrawlerLocation.GENDER + " TEXT " +
                 " );";
 
-        final String SQL_CREATE_WEATHER_TABLE = "CREATE TABLE " + PubContract.WhatIsHot.TABLE_NAME + " (" +
+        final String SQL_CREATE_PLACES_TABLE = "CREATE TABLE " + PubContract.WhatIsHot.TABLE_NAME + " (" +
                 PubContract.WhatIsHot._ID + " TEXT PRIMARY KEY," +
                 PubContract.WhatIsHot.COLUMN_NAME + " TEXT, " +
                 PubContract.WhatIsHot.COLUMN_PRICE + " TEXT, " +
@@ -43,7 +43,7 @@ public class PubDbHelper extends SQLiteOpenHelper {
                 ");";
 
         sqLiteDatabase.execSQL(SQL_CREATE_CRAWLER_TABLE);
-        sqLiteDatabase.execSQL(SQL_CREATE_WEATHER_TABLE);
+        sqLiteDatabase.execSQL(SQL_CREATE_PLACES_TABLE);
 
         createDefaultUser(sqLiteDatabase);
     }

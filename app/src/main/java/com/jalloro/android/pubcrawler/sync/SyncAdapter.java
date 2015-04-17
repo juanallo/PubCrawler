@@ -97,10 +97,10 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
                     mNewValues.put(PubContract.WhatIsHot._ID, place.getAddress());
                     mNewValues.put(PubContract.WhatIsHot.COLUMN_ACTUAL_UNDEFINED, place.getRealAmountOfUndefined());
 
-                    final String condition = PubContract.WhatIsHot._ID + " = " + DatabaseUtils.sqlEscapeString(place.getAddress());
+                    final String condition = PubContract.WhatIsHot.HOT_ID + " = " + DatabaseUtils.sqlEscapeString(place.getAddress());
 
-                    if(PubContract.existsValue(contentResolver, PubContract.WhatIsHot.CONTENT_URI, condition)){
-
+                    final boolean exists = PubContract.existsValue(contentResolver, PubContract.WhatIsHot.CONTENT_URI, condition);
+                    if(!exists){
                         mNewValues.put(PubContract.WhatIsHot.COLUMN_COORD_LAT, place.getLocation().getLatitude());
                         mNewValues.put(PubContract.WhatIsHot.COLUMN_COORD_LONG, place.getLocation().getLongitude());
 
@@ -115,12 +115,12 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
                         getContext().startService(intent);
                     }
                     else {
-                        contentResolver.update(
-                               PubContract.WhatIsHot.CONTENT_URI,
-                               mNewValues,
-                               condition,
-                               null
-                       );
+                        final int rowsUpdated = contentResolver.update(
+                                PubContract.WhatIsHot.CONTENT_URI,
+                                mNewValues,
+                                condition,
+                                null
+                        );
                     }
                 }
             }

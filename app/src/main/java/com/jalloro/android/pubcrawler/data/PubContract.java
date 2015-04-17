@@ -79,8 +79,10 @@ public class PubContract {
 //        public static final String COLUMN_ACTUAL_WOMEN = "actual_women";
         public static final String COLUMN_ACTUAL_UNDEFINED = "actual_undefined";
 
+        public static final String HOT_ID = TABLE_NAME + "." + _ID;
+
         public static final String[] COLUMNS = {
-                TABLE_NAME + "." + _ID,
+                HOT_ID,
                 COLUMN_NAME,
                 COLUMN_PRICE,
                 COLUMN_COORD_LAT,

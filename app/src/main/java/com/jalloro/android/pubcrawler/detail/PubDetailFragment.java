@@ -16,10 +16,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
-import com.firebase.client.DataSnapshot;
-import com.firebase.client.Firebase;
-import com.firebase.client.FirebaseError;
-import com.firebase.client.ValueEventListener;
 import com.jalloro.android.pubcrawler.R;
 import com.jalloro.android.pubcrawler.chart.Bar;
 import com.jalloro.android.pubcrawler.chart.BarChart;
@@ -109,7 +105,7 @@ public class PubDetailFragment extends Fragment implements LoaderManager.LoaderC
 //                null,
 //                null,
 //                null);
-        final String condition = PubContract.WhatIsHot._ID + " = " + DatabaseUtils.sqlEscapeString(currentPlace.getAddress());
+        final String condition = PubContract.WhatIsHot.HOT_ID + " = " + DatabaseUtils.sqlEscapeString(currentPlace.getAddress());
 
         return new CursorLoader(getActivity(),
                 PubContract.WhatIsHot.CONTENT_URI,
@@ -137,17 +133,10 @@ public class PubDetailFragment extends Fragment implements LoaderManager.LoaderC
             }
             //let's look for checkIn data
             final int actualIndex = data.getColumnIndex(PubContract.WhatIsHot.COLUMN_ACTUAL_UNDEFINED);
-            if(data.isNull(actualIndex)){
-                //adding db data and current checkIn
-                currentPlace.setRealAmountOfUndefined(data.getLong(actualIndex)+1);
-            }
+            //adding db data and current checkIn
+            currentPlace.setRealAmountOfUndefined(data.getLong(actualIndex));
             final int plannedIndex = data.getColumnIndex(PubContract.WhatIsHot.COLUMN_PLANNED_UNDEFINED);
-            if(data.isNull(plannedIndex)){
-                currentPlace.setPlannedAmountOfUndefined(data.getLong(plannedIndex));
-            }
-
-            //looking for most updated number of crawlers.
-            updateAmountOfCrawlers();
+            currentPlace.setPlannedAmountOfUndefined(data.getLong(plannedIndex));
 
             updateUi(getView(), currentPlace);
         }
@@ -155,25 +144,6 @@ public class PubDetailFragment extends Fragment implements LoaderManager.LoaderC
             //no info on place so we need to fetch it
             startIntentService();
         }
-    }
-
-    private void updateAmountOfCrawlers() {
-        final Firebase firebase = new Firebase("https://boiling-fire-4188.firebaseio.com/crawlers");
-        firebase.orderByChild("lastAddress").equalTo(currentPlace.getAddress()).addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                //TODO CHECK TIMESTAMP
-                currentPlace.setRealAmountOfUndefined(dataSnapshot.getChildrenCount());
-                //TODO GET PLANNED
-                currentPlace.setPlannedAmountOfUndefined(dataSnapshot.getChildrenCount() + 30);
-                updateStatusChart(getView(), currentPlace);
-            }
-
-            @Override
-            public void onCancelled(FirebaseError firebaseError) {
-
-            }
-        });
     }
 
     @Override

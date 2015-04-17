@@ -36,6 +36,7 @@ import com.jalloro.android.pubcrawler.helpers.PlayServicesHelper;
 import com.jalloro.android.pubcrawler.model.Crawler;
 import com.jalloro.android.pubcrawler.model.SimplifiedLocation;
 import com.jalloro.android.pubcrawler.hot.WhatIsHotActivity;
+import com.jalloro.android.pubcrawler.sync.SyncAdapter;
 
 public class CheckInFragment extends Fragment
         implements GoogleConnectionApiClientListener, LocationListener, LoaderManager.LoaderCallbacks<Cursor>
@@ -193,6 +194,8 @@ public class CheckInFragment extends Fragment
         );
 
         updateChecked(rootView, true);
+
+        SyncAdapter.syncImmediately(getActivity());
 
         openDetails();
     }
