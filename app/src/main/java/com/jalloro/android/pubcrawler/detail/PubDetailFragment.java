@@ -12,7 +12,12 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
+import android.support.v4.view.MenuItemCompat;
+import android.support.v7.widget.ShareActionProvider;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
@@ -36,6 +41,12 @@ public class PubDetailFragment extends Fragment implements LoaderManager.LoaderC
     private Place currentPlace;
     private PlaceResultReceiver placeReceiver;
     private SimplifiedLocation currentLocation;
+    private ShareActionProvider shareActionProvider;
+
+
+    public PubDetailFragment() {
+        setHasOptionsMenu(true);
+    }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -70,6 +81,30 @@ public class PubDetailFragment extends Fragment implements LoaderManager.LoaderC
         return rootView;
     }
 
+    @Override
+    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+        // Inflate the menu; this adds items to the action bar if it is present.
+        inflater.inflate(R.menu.menu_pub_detail, menu);
+
+        // Retrieve the share menu item
+        MenuItem menuItem = menu.findItem(R.id.action_share);
+
+        // Get the provider and hold onto it to set/change the share intent.
+        shareActionProvider = (ShareActionProvider) MenuItemCompat.getActionProvider(menuItem);
+
+        if(currentPlace.getName() != null){
+            shareActionProvider.setShareIntent(createSharePlace());
+        }
+    }
+
+    private Intent createSharePlace() {
+        Intent shareIntent = new Intent(Intent.ACTION_SEND);
+        shareIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_WHEN_TASK_RESET);
+        shareIntent.setType("text/plain");
+        shareIntent.putExtra(Intent.EXTRA_TEXT, "Meet me in " + currentPlace.getName() + ", address: " + currentPlace.getAddress() + " #pubCrawler");
+        return shareIntent;
+    }
+
     private void updateUi(View rootView, final Place currentPlace) {
         TextView pubName = (TextView) rootView.findViewById(R.id.pub_name);
         TextView pubPrice = (TextView) rootView.findViewById(R.id.pub_price);
@@ -92,6 +127,10 @@ public class PubDetailFragment extends Fragment implements LoaderManager.LoaderC
         });
 
         updateStatusChart(rootView, currentPlace);
+
+        if(shareActionProvider != null){
+            shareActionProvider.setShareIntent(createSharePlace());
+        }
     }
 
     private void updateStatusChart(View rootView, Place currentPlace) {

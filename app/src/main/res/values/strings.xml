@@ -21,4 +21,5 @@
     <string name="content_authority" translatable="false">com.jalloro.android.pubcrawler.app</string>
     <string name="now">Now</string>
     <string name="historic">Historic</string>
+    <string name="action_share">Share</string>
 </resources>
