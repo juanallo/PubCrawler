@@ -10,7 +10,7 @@ import com.jalloro.android.pubcrawler.model.Crawler;
 
 public class PubDbHelper extends SQLiteOpenHelper {
 
-    private static final int DATABASE_VERSION = 1;
+    private static final int DATABASE_VERSION = 2;
     final String androidId;
 
     static final String DATABASE_NAME = "pubCrawler.db";
@@ -38,8 +38,8 @@ public class PubDbHelper extends SQLiteOpenHelper {
                 PubContract.WhatIsHot.COLUMN_PRICE + " TEXT, " +
                 PubContract.WhatIsHot.COLUMN_COORD_LAT + " REAL NOT NULL, " +
                 PubContract.WhatIsHot.COLUMN_COORD_LONG + " REAL NOT NULL, " +
-                PubContract.WhatIsHot.COLUMN_PLANNED_UNDEFINED + " INTEGER, " +
-                PubContract.WhatIsHot.COLUMN_ACTUAL_UNDEFINED + " INTEGER" +
+                PubContract.WhatIsHot.COLUMN_HISTORIC + " INTEGER, " +
+                PubContract.WhatIsHot.COLUMN_NOW + " INTEGER" +
                 ");";
 
         sqLiteDatabase.execSQL(SQL_CREATE_CRAWLER_TABLE);
@@ -54,8 +54,6 @@ public class PubDbHelper extends SQLiteOpenHelper {
         values.put(PubContract.CrawlerLocation._ID, androidId);
         values.put(PubContract.CrawlerLocation.GENDER, Crawler.Gender.UNDEFINED.name());
         database.insert(PubContract.CrawlerLocation.TABLE_NAME, null, values);
-//        database.close();
-
     }
 
     @Override

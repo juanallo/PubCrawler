@@ -22,6 +22,7 @@ import com.firebase.client.Firebase;
 import com.firebase.client.FirebaseError;
 import com.firebase.client.ValueEventListener;
 import com.jalloro.android.pubcrawler.R;
+import com.jalloro.android.pubcrawler.data.FirebaseContract;
 import com.jalloro.android.pubcrawler.data.PubContract;
 import com.jalloro.android.pubcrawler.detail.FetchPlaceIntentService;
 import com.jalloro.android.pubcrawler.model.Place;
@@ -45,7 +46,7 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
     public SyncAdapter(Context context, boolean autoInitialize) {
         super(context, autoInitialize);
         contentResolver = context.getContentResolver();
-        firebaseUrl = context.getResources().getString(R.string.firebase_base_url);
+        firebaseUrl = FirebaseContract.getBaseUrl(context.getResources());
     }
 
     /**
@@ -59,7 +60,7 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
             boolean allowParallelSyncs) {
         super(context, autoInitialize, allowParallelSyncs);
         contentResolver = context.getContentResolver();
-        firebaseUrl = context.getResources().getString(R.string.firebase_base_url);
+        firebaseUrl = FirebaseContract.getBaseUrl(context.getResources());
     }
 
     @Override
@@ -75,12 +76,12 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
         firebase.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
-                DataSnapshot crawlers =dataSnapshot.child("crawlers");
+                DataSnapshot crawlers =dataSnapshot.child(FirebaseContract.CRAWLERS);
 
                 Map<String, Place> places = new HashMap<>();
                 for (DataSnapshot pl : crawlers.getChildren()){
                     Map<String, Object> newPlace = (Map<String, Object>) pl.getValue();
-                    final String address = newPlace.get("lastAddress").toString();
+                    final String address = newPlace.get(FirebaseContract.LAST_ADDRESS).toString();
 
                     //add historic info.
                     long pubCheckins = getPubHistoricCheckins(dataSnapshot, address);
@@ -102,15 +103,15 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
         if(places.containsKey(address)){
             final Place place = places.get(address);
             place.addCrawler();
-            place.setPlannedAmountOfUndefined(pubCheckins);
+            place.setHistoric(pubCheckins);
         }
         else {
-            final Map<String, Object> lastLocation = (Map<String, Object>) newPlace.get("lastLocation");
-            final double latitude = Double.parseDouble(lastLocation.get("latitude").toString());
-            final double longitude = Double.parseDouble(lastLocation.get("longitude").toString());
+            final Map<String, Object> lastLocation = (Map<String, Object>) newPlace.get(FirebaseContract.LAST_LOCATION);
+            final double latitude = Double.parseDouble(lastLocation.get(FirebaseContract.LATITUDE).toString());
+            final double longitude = Double.parseDouble(lastLocation.get(FirebaseContract.LONGITUDE).toString());
             Place place = new Place(new SimplifiedLocation(latitude, longitude), address);
             place.addCrawler();
-            place.setPlannedAmountOfUndefined(pubCheckins);
+            place.setHistoric(pubCheckins);
             places.put(address, place);
         }
     }
@@ -121,8 +122,8 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
             ContentValues mNewValues = new ContentValues();
 
             mNewValues.put(PubContract.WhatIsHot._ID, place.getAddress());
-            mNewValues.put(PubContract.WhatIsHot.COLUMN_ACTUAL_UNDEFINED, place.getRealAmountOfUndefined());
-            mNewValues.put(PubContract.WhatIsHot.COLUMN_PLANNED_UNDEFINED, place.getPlannedAmountOfUndefined());
+            mNewValues.put(PubContract.WhatIsHot.COLUMN_NOW, place.getNow());
+            mNewValues.put(PubContract.WhatIsHot.COLUMN_HISTORIC, place.getHistoric());
 
             final String condition = PubContract.WhatIsHot.HOT_ID + " = " + DatabaseUtils.sqlEscapeString(place.getAddress());
 
@@ -159,7 +160,7 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
     }
 
     private long getPubHistoricCheckins(DataSnapshot dataSnapshot, String address) {
-        DataSnapshot pubs =dataSnapshot.child("pubs");
+        DataSnapshot pubs =dataSnapshot.child(FirebaseContract.PUBS);
         long pubCheckins = 0;
         final DataSnapshot pub = pubs.child(address.replace("\n", ""));
         if(pub != null){

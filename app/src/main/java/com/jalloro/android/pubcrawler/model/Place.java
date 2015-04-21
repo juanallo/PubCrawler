@@ -7,12 +7,8 @@ public class Place {
     private final String address;
     private String name;
     private PriceRange priceRange;
-    private long realAmountOfMen;
-    private long realAmountOfUndefined;
-    private long realAmountOfWomen;
-    private long plannedAmountOfMen;
-    private long plannedAmountOfUndefined;
-    private long plannedAmountOfWomen;
+    private long now;
+    private long historic;
 
     public Place(SimplifiedLocation location, String address) {
         this.location = location;
@@ -43,52 +39,20 @@ public class Place {
         return location;
     }
 
-    public long getRealAmountOfMen() {
-        return realAmountOfMen;
+    public long getNow() {
+        return now;
     }
 
-    public void setRealAmountOfMen(long realAmountOfMen) {
-        this.realAmountOfMen = realAmountOfMen;
+    public void setNow(long now) {
+        this.now = now;
     }
 
-    public long getRealAmountOfWomen() {
-        return realAmountOfWomen;
+    public long getHistoric() {
+        return historic;
     }
 
-    public void setRealAmountOfWomen(long realAmountOfWomen) {
-        this.realAmountOfWomen = realAmountOfWomen;
-    }
-
-    public long getPlannedAmountOfMen() {
-        return plannedAmountOfMen;
-    }
-
-    public void setPlannedAmountOfMen(long plannedAmountOfMen) {
-        this.plannedAmountOfMen = plannedAmountOfMen;
-    }
-
-    public long getPlannedAmountOfWomen() {
-        return plannedAmountOfWomen;
-    }
-
-    public void setPlannedAmountOfWomen(long plannedAmountOfWomen) {
-        this.plannedAmountOfWomen = plannedAmountOfWomen;
-    }
-
-    public long getRealAmountOfUndefined() {
-        return realAmountOfUndefined;
-    }
-
-    public void setRealAmountOfUndefined(long realAmountOfUndefined) {
-        this.realAmountOfUndefined = realAmountOfUndefined;
-    }
-
-    public long getPlannedAmountOfUndefined() {
-        return plannedAmountOfUndefined;
-    }
-
-    public void setPlannedAmountOfUndefined(long plannedAmountOfUndefined) {
-        this.plannedAmountOfUndefined = plannedAmountOfUndefined;
+    public void setHistoric(long historic) {
+        this.historic = historic;
     }
 
     public void setPriceRange(PriceRange priceRange) {
@@ -96,6 +60,6 @@ public class Place {
     }
 
     public void addCrawler(){
-        this.realAmountOfUndefined += 1;
+        this.now += 1;
     }
 }

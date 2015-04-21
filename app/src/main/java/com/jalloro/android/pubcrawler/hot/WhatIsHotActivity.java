@@ -46,37 +46,6 @@ public class WhatIsHotActivity
         crawlerLocation = getIntent().getParcelableExtra(PubDetailFragment.PUB_LOCATION);
         crawlerAddress = getIntent().getStringExtra(CheckInFragment.PUB_ADDRESS);
 
-
-//        Firebase.setAndroidContext(this);
-//
-//        final Firebase firebase = new Firebase(getResources().getString(R.string.firebase_base_url) +"/pubs/");
-//
-//
-//        firebase.addValueEventListener(new ValueEventListener() {
-//            @Override
-//            public void onDataChange(DataSnapshot snapshot) {
-//                if(snapshot.getValue()!= null) {
-//                    Map<String, Object> crawlerInfo = (Map<String, Object>) snapshot.getValue();
-//                    for (String placeAddress : crawlerInfo.keySet()){
-//                        if(!placeAddress.equals(crawlerAddress.replace("\n", " "))){
-//                            Map<String, Object> place = (Map<String, Object>) crawlerInfo.get(placeAddress);
-//                            if(place.containsKey("location")){
-//                                Map<String, Object> locationInfo = (Map<String, Object>) place.get("location");
-//                                final LatLng position = new LatLng((double) locationInfo.get("latitude"),(double)locationInfo.get("longitude"));
-//                                final String name = (String) place.get("name");
-//                                mMap.addMarker(new MarkerOptions().position(position).title(name).snippet(placeAddress));
-//                            }
-//                        }
-//                    }
-//                };
-//            }
-//
-//            @Override
-//            public void onCancelled(FirebaseError firebaseError) {
-//                Log.e(LOG_CAT,"The read failed: " + firebaseError.getMessage());
-//            }
-//        });
-
         places = new HashMap<>();
         getLoaderManager().initLoader(0,null,this);
         setContentView(R.layout.activity_near);
@@ -168,7 +137,7 @@ public class WhatIsHotActivity
         while (data.moveToNext())
         {
             final String address = data.getString(data.getColumnIndex(PubContract.WhatIsHot._ID));
-            final long actualCrawlers = data.getLong(data.getColumnIndex(PubContract.WhatIsHot.COLUMN_ACTUAL_UNDEFINED));
+            final long actualCrawlers = data.getLong(data.getColumnIndex(PubContract.WhatIsHot.COLUMN_NOW));
             if(!places.containsKey(address) && actualCrawlers > 0){
                 final double latitude = data.getDouble(data.getColumnIndex(PubContract.WhatIsHot.COLUMN_COORD_LAT));
                 final double longitude = data.getDouble(data.getColumnIndex(PubContract.WhatIsHot.COLUMN_COORD_LONG));

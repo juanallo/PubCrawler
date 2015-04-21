@@ -30,6 +30,7 @@ import com.google.android.gms.location.LocationListener;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
 import com.jalloro.android.pubcrawler.R;
+import com.jalloro.android.pubcrawler.data.FirebaseContract;
 import com.jalloro.android.pubcrawler.data.PubContract;
 import com.jalloro.android.pubcrawler.detail.PubDetailActivity;
 import com.jalloro.android.pubcrawler.detail.PubDetailFragment;
@@ -168,7 +169,7 @@ public class CheckInFragment extends Fragment
                 }
             });
             PlayServicesHelper.startLocationUpdates(googleApiClient, locationRequest, this);
-//            check timestamp
+
             if(currentCrawler != null){
                 updateChecked(rootView,currentCrawler.isCheckedIn(lastLocation));
             }
@@ -186,7 +187,10 @@ public class CheckInFragment extends Fragment
         currentCrawler.checkIn(new SimplifiedLocation(lastLocation.getLatitude(), lastLocation.getLongitude()), currentAddress);
         userInfo.setValue(currentCrawler);
 
-        final Firebase pub = new Firebase(getResources().getString(R.string.firebase_base_url) + "/pubs/" + currentAddress.replace("\n", "") + "/" + currentCrawler.getCheckInTimeStamp());
+        final Firebase pub = new Firebase(FirebaseContract.getPubUrl(getResources(), currentAddress) +
+                                          FirebaseContract.URL_SEPARATOR +
+                                          currentCrawler.getCheckInTimeStamp());
+
         pub.setValue(currentCrawler.getUserId());
 
         // Defines an object to contain the new values to insert
@@ -317,7 +321,7 @@ public class CheckInFragment extends Fragment
                 updateChecked(getView(), currentCrawler.isCheckedIn(lastLocation));
             }
 
-            userInfo = new Firebase(getResources().getString(R.string.firebase_base_url) + "/crawlers/" + currentCrawler.getUserId());
+            userInfo = new Firebase(FirebaseContract.getCurrentCrawlerUrl(getResources(), currentCrawler));
         }
         else {
             Log.e(LOG_CAT, "Default user not found in BD, forcing creation.");
@@ -346,7 +350,7 @@ public class CheckInFragment extends Fragment
         @Override
         public void onReceiveResult(int resultCode, Bundle resultData) {
             currentAddress = resultData.getString(FetchAddressIntentService.Constants.RESULT_DATA_KEY);
-            if (resultCode == FetchAddressIntentService.Constants.SUCCESS_RESULT) {
+            if (resultCode == FetchAddressIntentService.Constants.SUCCESS_RESULT && getView() != null) {
                 //todo check timeStamp
                 updateChecked(getView(),currentCrawler != null && currentAddress.equals(currentCrawler.getLastAddress()));
             }

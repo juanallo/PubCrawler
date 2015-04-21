@@ -71,13 +71,9 @@ public class PubContract {
         public static final String COLUMN_COORD_LAT = "coord_lat";
         public static final String COLUMN_COORD_LONG = "coord_long";
 
-//        public static final String COLUMN_PLANNED_MEN = "planned_men";
-//        public static final String COLUMN_PLANNED_WOMEN = "planned_women";
-        public static final String COLUMN_PLANNED_UNDEFINED = "planned_undefined";
+        public static final String COLUMN_HISTORIC = "historic";
 
-//        public static final String COLUMN_ACTUAL_MEN = "actual_men";
-//        public static final String COLUMN_ACTUAL_WOMEN = "actual_women";
-        public static final String COLUMN_ACTUAL_UNDEFINED = "actual_undefined";
+        public static final String COLUMN_NOW = "now";
 
         public static final String HOT_ID = TABLE_NAME + "." + _ID;
 
@@ -87,8 +83,8 @@ public class PubContract {
                 COLUMN_PRICE,
                 COLUMN_COORD_LAT,
                 COLUMN_COORD_LONG,
-                COLUMN_PLANNED_UNDEFINED,
-                COLUMN_ACTUAL_UNDEFINED
+                COLUMN_HISTORIC,
+                COLUMN_NOW
         };
 
         public static Uri buildPubsUri(long id) {

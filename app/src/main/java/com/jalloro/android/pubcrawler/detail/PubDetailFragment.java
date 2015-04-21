@@ -96,8 +96,8 @@ public class PubDetailFragment extends Fragment implements LoaderManager.LoaderC
 
     private void updateStatusChart(View rootView, Place currentPlace) {
         List<Bar> values = new ArrayList<>();
-        values.add(new Bar(getString(R.string.now), currentPlace.getRealAmountOfUndefined(), R.color.light_blue));
-        values.add(new Bar(getString(R.string.historic), currentPlace.getPlannedAmountOfUndefined(), R.color.pink));
+        values.add(new Bar(getString(R.string.now), currentPlace.getNow(), R.color.light_blue));
+        values.add(new Bar(getString(R.string.historic), currentPlace.getHistoric(), R.color.pink));
         BarChart chart = (BarChart) rootView.findViewById(R.id.hot_chart);
         chart.setData(values);
     }
@@ -118,14 +118,6 @@ public class PubDetailFragment extends Fragment implements LoaderManager.LoaderC
 
     @Override
     public Loader<Cursor> onCreateLoader(int id, Bundle args) {
-//        Uri crawlerUri = PubContract.WhatIsHot.buildCurrentPubUri(currentPlace.getAddress());
-//
-//        return new CursorLoader(getActivity(),
-//                crawlerUri,
-//                PubContract.WhatIsHot.COLUMNS,
-//                null,
-//                null,
-//                null);
         final String condition = PubContract.WhatIsHot.HOT_ID + " = " + DatabaseUtils.sqlEscapeString(currentPlace.getAddress());
 
         return new CursorLoader(getActivity(),
@@ -149,11 +141,11 @@ public class PubDetailFragment extends Fragment implements LoaderManager.LoaderC
                 currentPlace.setPriceRange(PriceRange.valueOf(price));
 
                 //let's look for checkIn data
-                final int actualIndex = data.getColumnIndex(PubContract.WhatIsHot.COLUMN_ACTUAL_UNDEFINED);
+                final int actualIndex = data.getColumnIndex(PubContract.WhatIsHot.COLUMN_NOW);
                 //adding db data and current checkIn
-                currentPlace.setRealAmountOfUndefined(data.getLong(actualIndex));
-                final int plannedIndex = data.getColumnIndex(PubContract.WhatIsHot.COLUMN_PLANNED_UNDEFINED);
-                currentPlace.setPlannedAmountOfUndefined(data.getLong(plannedIndex));
+                currentPlace.setNow(data.getLong(actualIndex));
+                final int plannedIndex = data.getColumnIndex(PubContract.WhatIsHot.COLUMN_HISTORIC);
+                currentPlace.setHistoric(data.getLong(plannedIndex));
                 updateUi(getView(), currentPlace);
 
             }
