@@ -31,6 +31,8 @@ import java.util.List;
 
 public class FetchPlaceIntentService extends IntentService {
 
+    private String foursquareId;
+    private String foursquareSecret;
     private ResultReceiver resultReceiver;
 
     public FetchPlaceIntentService() {
@@ -43,7 +45,9 @@ public class FetchPlaceIntentService extends IntentService {
         //get address info from intent
         String address = intent.getStringExtra(Constants.ADDRESS_DATA_EXTRA);
         resultReceiver = intent.getParcelableExtra(Constants.RECEIVER);
-        SimplifiedLocation location = intent.getParcelableExtra(Constants.LOCATION_DATA_EXTRA);;
+        SimplifiedLocation location = intent.getParcelableExtra(Constants.LOCATION_DATA_EXTRA);
+        foursquareSecret = intent.getStringExtra(Constants.FOURSQUARE_SECRET);
+        foursquareId = intent.getStringExtra(Constants.FOURSQUARE_ID);
 
         try {
             //connect to foursquare and get info
@@ -127,8 +131,8 @@ public class FetchPlaceIntentService extends IntentService {
         try {
 
             Uri builtUri = Uri.parse(FOURSQUARE_BASE_URL).buildUpon()
-                    .appendQueryParameter(CLIENT_PARAM, CLIENT_ID)
-                    .appendQueryParameter(SECRET_PARAM,CLIENT_SECRET)
+                    .appendQueryParameter(CLIENT_PARAM, foursquareId)
+                    .appendQueryParameter(SECRET_PARAM,foursquareSecret)
                     .appendQueryParameter(VERSION_PARAM, VERSION_USED)
                     .build();
 
@@ -179,8 +183,6 @@ public class FetchPlaceIntentService extends IntentService {
         return placeInfo;
     }
 
-
-
     private void saveAndDeliver(int resultCode, AddressInfo addressInfo, String address){
         // Defines an object to contain the new values to insert
         ContentValues mNewValues = new ContentValues();
@@ -219,6 +221,8 @@ public class FetchPlaceIntentService extends IntentService {
     public final class Constants {
         public static final int SUCCESS_RESULT = 0;
         public static final int FAILURE_RESULT = 1;
+        public static final String FOURSQUARE_ID = "FOURSQUARE_ID";
+        public static final String FOURSQUARE_SECRET = "FOURSQUARE_SECRET";
         public static final String PACKAGE_NAME =
                 "com.google.android.gms.location.sample.locationplace";
         public static final String RECEIVER = PACKAGE_NAME + ".RECEIVER";
@@ -235,8 +239,6 @@ public class FetchPlaceIntentService extends IntentService {
     private static final String LOCATION_PARAM = "ll";
     private static final String CLIENT_PARAM = "client_id";
     private static final String SECRET_PARAM = "client_secret";
-    private static final String CLIENT_ID = "QMUKHTYBO5WWETB1JPZUWXTEOG4JBF2ESFASQO11QFGURCE1";
-    private static final String CLIENT_SECRET = "XISM01N0H4CBHG3JSOPDKZSTEPPYAR41OW3UVDXQ4DO4LAFX";
     private static final String VERSION_PARAM = "v";
     private static final String VERSION_USED = "20140806";
 }

@@ -49,7 +49,7 @@ public class WhatIsHotActivity
 
 //        Firebase.setAndroidContext(this);
 //
-//        final Firebase firebase = new Firebase("https://boiling-fire-4188.firebaseio.com/pubs/");
+//        final Firebase firebase = new Firebase(getResources().getString(R.string.firebase_base_url) +"/pubs/");
 //
 //
 //        firebase.addValueEventListener(new ValueEventListener() {

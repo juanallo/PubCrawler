@@ -1,9 +1,12 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools" android:layout_width="match_parent"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/main_pub_detail"
+    android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
     tools:context="com.jalloro.android.pubcrawler.detail.PubDetailActivity$PlaceholderFragment">
 <LinearLayout
+    android:id="@+id/detail_header"
     android:layout_width="match_parent"
     android:orientation="vertical"
     android:background="@color/orange"
@@ -45,7 +48,7 @@
         android:paddingBottom="@dimen/activity_vertical_margin"
         android:layout_weight="1"
         android:layout_width="match_parent"
-        android:layout_height="0dp">
+        android:layout_height="match_parent">
         <TextView android:text="@string/how_hot"
             android:id="@+id/hot_title"
             android:textSize="22sp"

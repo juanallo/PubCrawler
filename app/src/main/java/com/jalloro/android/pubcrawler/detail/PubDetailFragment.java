@@ -1,6 +1,7 @@
 package com.jalloro.android.pubcrawler.detail;
 
 import android.content.Intent;
+import android.content.res.Configuration;
 import android.database.Cursor;
 import android.database.DatabaseUtils;
 import android.net.Uri;
@@ -14,6 +15,7 @@ import android.support.v4.content.Loader;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import com.jalloro.android.pubcrawler.R;
@@ -52,6 +54,19 @@ public class PubDetailFragment extends Fragment implements LoaderManager.LoaderC
 
         placeReceiver = new PlaceResultReceiver(new Handler());
 
+        //change layout orientation based on phone orientation.
+        final int phoneOrientation = getResources().getConfiguration().orientation;
+        if(phoneOrientation == Configuration.ORIENTATION_LANDSCAPE){
+            LinearLayout mainLayout = (LinearLayout) rootView.findViewById(R.id.main_pub_detail);
+            mainLayout.setOrientation(LinearLayout.HORIZONTAL);
+
+            LinearLayout header = (LinearLayout) rootView.findViewById(R.id.detail_header);
+            LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.MATCH_PARENT);
+            params.weight = 1.0f;
+            header.setLayoutParams(params);
+        }
+
         return rootView;
     }
 
@@ -81,8 +96,8 @@ public class PubDetailFragment extends Fragment implements LoaderManager.LoaderC
 
     private void updateStatusChart(View rootView, Place currentPlace) {
         List<Bar> values = new ArrayList<>();
-        values.add(new Bar("Now", currentPlace.getRealAmountOfUndefined(), R.color.light_blue));
-        values.add(new Bar("Planned", currentPlace.getPlannedAmountOfUndefined(), R.color.pink));
+        values.add(new Bar(getString(R.string.now), currentPlace.getRealAmountOfUndefined(), R.color.light_blue));
+        values.add(new Bar(getString(R.string.historic), currentPlace.getPlannedAmountOfUndefined(), R.color.pink));
         BarChart chart = (BarChart) rootView.findViewById(R.id.hot_chart);
         chart.setData(values);
     }
@@ -92,6 +107,12 @@ public class PubDetailFragment extends Fragment implements LoaderManager.LoaderC
         intent.putExtra(FetchPlaceIntentService.Constants.RECEIVER, placeReceiver);
         intent.putExtra(FetchPlaceIntentService.Constants.ADDRESS_DATA_EXTRA, currentPlace.getAddress());
         intent.putExtra(FetchPlaceIntentService.Constants.LOCATION_DATA_EXTRA, currentPlace.getLocation());
+
+        String foursquareId = getResources().getString(R.string.foursquare_id);
+        String foursquareSecret = getResources().getString(R.string.foursquare_secret);
+
+        intent.putExtra(FetchPlaceIntentService.Constants.FOURSQUARE_ID, foursquareId);
+        intent.putExtra(FetchPlaceIntentService.Constants.FOURSQUARE_SECRET, foursquareSecret);
         getActivity().startService(intent);
     }
 
@@ -126,19 +147,21 @@ public class PubDetailFragment extends Fragment implements LoaderManager.LoaderC
                 currentPlace.getLocation().setLongitude(data.getLong(data.getColumnIndex(PubContract.WhatIsHot.COLUMN_COORD_LONG)));
                 final String price = data.getString(data.getColumnIndex(PubContract.WhatIsHot.COLUMN_PRICE));
                 currentPlace.setPriceRange(PriceRange.valueOf(price));
+
+                //let's look for checkIn data
+                final int actualIndex = data.getColumnIndex(PubContract.WhatIsHot.COLUMN_ACTUAL_UNDEFINED);
+                //adding db data and current checkIn
+                currentPlace.setRealAmountOfUndefined(data.getLong(actualIndex));
+                final int plannedIndex = data.getColumnIndex(PubContract.WhatIsHot.COLUMN_PLANNED_UNDEFINED);
+                currentPlace.setPlannedAmountOfUndefined(data.getLong(plannedIndex));
+                updateUi(getView(), currentPlace);
+
             }
             else {
                 //no info on place so we need to fetch it.
                 startIntentService();
             }
-            //let's look for checkIn data
-            final int actualIndex = data.getColumnIndex(PubContract.WhatIsHot.COLUMN_ACTUAL_UNDEFINED);
-            //adding db data and current checkIn
-            currentPlace.setRealAmountOfUndefined(data.getLong(actualIndex));
-            final int plannedIndex = data.getColumnIndex(PubContract.WhatIsHot.COLUMN_PLANNED_UNDEFINED);
-            currentPlace.setPlannedAmountOfUndefined(data.getLong(plannedIndex));
 
-            updateUi(getView(), currentPlace);
         }
         else {
             //no info on place so we need to fetch it

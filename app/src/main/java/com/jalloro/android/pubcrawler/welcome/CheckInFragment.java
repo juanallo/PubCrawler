@@ -2,6 +2,7 @@ package com.jalloro.android.pubcrawler.welcome;
 
 import android.content.ContentValues;
 import android.content.Intent;
+import android.content.res.Configuration;
 import android.database.Cursor;
 import android.location.Location;
 import android.net.Uri;
@@ -19,6 +20,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ImageButton;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import com.firebase.client.Firebase;
@@ -33,9 +35,9 @@ import com.jalloro.android.pubcrawler.detail.PubDetailActivity;
 import com.jalloro.android.pubcrawler.detail.PubDetailFragment;
 import com.jalloro.android.pubcrawler.helpers.GoogleConnectionApiClientListener;
 import com.jalloro.android.pubcrawler.helpers.PlayServicesHelper;
+import com.jalloro.android.pubcrawler.hot.WhatIsHotActivity;
 import com.jalloro.android.pubcrawler.model.Crawler;
 import com.jalloro.android.pubcrawler.model.SimplifiedLocation;
-import com.jalloro.android.pubcrawler.hot.WhatIsHotActivity;
 import com.jalloro.android.pubcrawler.sync.SyncAdapter;
 
 public class CheckInFragment extends Fragment
@@ -69,6 +71,13 @@ public class CheckInFragment extends Fragment
             checkInText.setVisibility(View.GONE);
             checkInButton.setVisibility(View.GONE);
             whatIsHot.setVisibility(View.GONE);
+        }
+
+        //change layout orientation based on phone orientation.
+        final int phoneOrientation = getResources().getConfiguration().orientation;
+        if(phoneOrientation == Configuration.ORIENTATION_LANDSCAPE){
+            LinearLayout mainLayout = (LinearLayout) rootView.findViewById(R.id.main_checkin);
+            mainLayout.setOrientation(LinearLayout.HORIZONTAL);
         }
 
         if(PlayServicesHelper.isGooglePlayInstalled(getActivity())){
@@ -159,7 +168,7 @@ public class CheckInFragment extends Fragment
                 }
             });
             PlayServicesHelper.startLocationUpdates(googleApiClient, locationRequest, this);
-
+//            check timestamp
             if(currentCrawler != null){
                 updateChecked(rootView,currentCrawler.isCheckedIn(lastLocation));
             }
@@ -176,6 +185,9 @@ public class CheckInFragment extends Fragment
     private void checkIn(View rootView) {
         currentCrawler.checkIn(new SimplifiedLocation(lastLocation.getLatitude(), lastLocation.getLongitude()), currentAddress);
         userInfo.setValue(currentCrawler);
+
+        final Firebase pub = new Firebase(getResources().getString(R.string.firebase_base_url) + "/pubs/" + currentAddress.replace("\n", "") + "/" + currentCrawler.getCheckInTimeStamp());
+        pub.setValue(currentCrawler.getUserId());
 
         // Defines an object to contain the new values to insert
         ContentValues mNewValues = new ContentValues();
@@ -300,12 +312,12 @@ public class CheckInFragment extends Fragment
                 final double longitude = data.getDouble(data.getColumnIndex(PubContract.CrawlerLocation.COLUMN_COORD_LONG));
                 currentCrawler.setLastLocation(new SimplifiedLocation(latitude,longitude));
             }
-
+            //todo add timestamp.
             if(lastLocation != null){
                 updateChecked(getView(), currentCrawler.isCheckedIn(lastLocation));
             }
 
-            userInfo = new Firebase("https://boiling-fire-4188.firebaseio.com/crawlers/" + currentCrawler.getUserId());
+            userInfo = new Firebase(getResources().getString(R.string.firebase_base_url) + "/crawlers/" + currentCrawler.getUserId());
         }
         else {
             Log.e(LOG_CAT, "Default user not found in BD, forcing creation.");
@@ -335,6 +347,7 @@ public class CheckInFragment extends Fragment
         public void onReceiveResult(int resultCode, Bundle resultData) {
             currentAddress = resultData.getString(FetchAddressIntentService.Constants.RESULT_DATA_KEY);
             if (resultCode == FetchAddressIntentService.Constants.SUCCESS_RESULT) {
+                //todo check timeStamp
                 updateChecked(getView(),currentCrawler != null && currentAddress.equals(currentCrawler.getLastAddress()));
             }
         }

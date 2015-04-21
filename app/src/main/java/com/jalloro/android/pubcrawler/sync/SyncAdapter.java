@@ -36,6 +36,7 @@ import java.util.Map;
  */
 public class SyncAdapter extends AbstractThreadedSyncAdapter {
 
+    private final String firebaseUrl;
     ContentResolver contentResolver;
 
     /**
@@ -44,6 +45,7 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
     public SyncAdapter(Context context, boolean autoInitialize) {
         super(context, autoInitialize);
         contentResolver = context.getContentResolver();
+        firebaseUrl = context.getResources().getString(R.string.firebase_base_url);
     }
 
     /**
@@ -57,6 +59,7 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
             boolean allowParallelSyncs) {
         super(context, autoInitialize, allowParallelSyncs);
         contentResolver = context.getContentResolver();
+        firebaseUrl = context.getResources().getString(R.string.firebase_base_url);
     }
 
     @Override
@@ -68,61 +71,24 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
             SyncResult syncResult) {
         Log.i(LOG_CAT, "Sync Called");
         Firebase.setAndroidContext(getContext());
-        final Firebase firebase = new Firebase("https://boiling-fire-4188.firebaseio.com/crawlers");
+        final Firebase firebase = new Firebase(firebaseUrl);
         firebase.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
+                DataSnapshot crawlers =dataSnapshot.child("crawlers");
+
                 Map<String, Place> places = new HashMap<>();
-                for (DataSnapshot pl : dataSnapshot.getChildren()){
+                for (DataSnapshot pl : crawlers.getChildren()){
                     Map<String, Object> newPlace = (Map<String, Object>) pl.getValue();
                     final String address = newPlace.get("lastAddress").toString();
+
+                    //add historic info.
+                    long pubCheckins = getPubHistoricCheckins(dataSnapshot, address);
+
                     //TODO check timeStamp
-                    if(places.containsKey(address)){
-                        final Place place = places.get(address);
-                        place.addCrawler();
-                    }
-                    else {
-                        final Map<String, Object> lastLocation = (Map<String, Object>) newPlace.get("lastLocation");
-                        final double latitude = Double.parseDouble(lastLocation.get("latitude").toString());
-                        final double longitude = Double.parseDouble(lastLocation.get("longitude").toString());
-                        Place place = new Place(new SimplifiedLocation(latitude, longitude), address);
-                        place.addCrawler();
-                        places.put(address, place);
-                    }
-                 }
-                for (Place place : places.values()){
-                    // Defines an object to contain the new values to insert
-                    ContentValues mNewValues = new ContentValues();
-
-                    mNewValues.put(PubContract.WhatIsHot._ID, place.getAddress());
-                    mNewValues.put(PubContract.WhatIsHot.COLUMN_ACTUAL_UNDEFINED, place.getRealAmountOfUndefined());
-
-                    final String condition = PubContract.WhatIsHot.HOT_ID + " = " + DatabaseUtils.sqlEscapeString(place.getAddress());
-
-                    final boolean exists = PubContract.existsValue(contentResolver, PubContract.WhatIsHot.CONTENT_URI, condition);
-                    if(!exists){
-                        mNewValues.put(PubContract.WhatIsHot.COLUMN_COORD_LAT, place.getLocation().getLatitude());
-                        mNewValues.put(PubContract.WhatIsHot.COLUMN_COORD_LONG, place.getLocation().getLongitude());
-
-                        contentResolver.insert(
-                                PubContract.WhatIsHot.CONTENT_URI,
-                                mNewValues
-                        );
-                        Intent intent = new Intent(getContext(), FetchPlaceIntentService.class);
-                        intent.putExtra(FetchPlaceIntentService.Constants.RECEIVER, new ResultReceiver(new Handler()));
-                        intent.putExtra(FetchPlaceIntentService.Constants.ADDRESS_DATA_EXTRA, place.getAddress());
-                        intent.putExtra(FetchPlaceIntentService.Constants.LOCATION_DATA_EXTRA, place.getLocation());
-                        getContext().startService(intent);
-                    }
-                    else {
-                        final int rowsUpdated = contentResolver.update(
-                                PubContract.WhatIsHot.CONTENT_URI,
-                                mNewValues,
-                                condition,
-                                null
-                        );
-                    }
+                    getPlaceInformation(places, newPlace, address, pubCheckins);
                 }
+                updatePubsDb(places);
             }
 
             @Override
@@ -130,6 +96,76 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
                 Log.e(LOG_CAT, firebaseError.getMessage());
             }
         });
+    }
+
+    private void getPlaceInformation(Map<String, Place> places, Map<String, Object> newPlace, String address, long pubCheckins) {
+        if(places.containsKey(address)){
+            final Place place = places.get(address);
+            place.addCrawler();
+            place.setPlannedAmountOfUndefined(pubCheckins);
+        }
+        else {
+            final Map<String, Object> lastLocation = (Map<String, Object>) newPlace.get("lastLocation");
+            final double latitude = Double.parseDouble(lastLocation.get("latitude").toString());
+            final double longitude = Double.parseDouble(lastLocation.get("longitude").toString());
+            Place place = new Place(new SimplifiedLocation(latitude, longitude), address);
+            place.addCrawler();
+            place.setPlannedAmountOfUndefined(pubCheckins);
+            places.put(address, place);
+        }
+    }
+
+    private void updatePubsDb(Map<String, Place> places) {
+        for (Place place : places.values()){
+            // Defines an object to contain the new values to insert
+            ContentValues mNewValues = new ContentValues();
+
+            mNewValues.put(PubContract.WhatIsHot._ID, place.getAddress());
+            mNewValues.put(PubContract.WhatIsHot.COLUMN_ACTUAL_UNDEFINED, place.getRealAmountOfUndefined());
+            mNewValues.put(PubContract.WhatIsHot.COLUMN_PLANNED_UNDEFINED, place.getPlannedAmountOfUndefined());
+
+            final String condition = PubContract.WhatIsHot.HOT_ID + " = " + DatabaseUtils.sqlEscapeString(place.getAddress());
+
+            final boolean exists = PubContract.existsValue(contentResolver, PubContract.WhatIsHot.CONTENT_URI, condition);
+            if(!exists){
+                mNewValues.put(PubContract.WhatIsHot.COLUMN_COORD_LAT, place.getLocation().getLatitude());
+                mNewValues.put(PubContract.WhatIsHot.COLUMN_COORD_LONG, place.getLocation().getLongitude());
+
+                contentResolver.insert(
+                        PubContract.WhatIsHot.CONTENT_URI,
+                        mNewValues
+                );
+                Intent intent = new Intent(getContext(), FetchPlaceIntentService.class);
+                intent.putExtra(FetchPlaceIntentService.Constants.RECEIVER, new ResultReceiver(new Handler()));
+                intent.putExtra(FetchPlaceIntentService.Constants.ADDRESS_DATA_EXTRA, place.getAddress());
+                intent.putExtra(FetchPlaceIntentService.Constants.LOCATION_DATA_EXTRA, place.getLocation());
+
+                String foursquareId = getContext().getResources().getString(R.string.foursquare_id);
+                String foursquareSecret = getContext().getResources().getString(R.string.foursquare_secret);
+
+                intent.putExtra(FetchPlaceIntentService.Constants.FOURSQUARE_ID, foursquareId);
+                intent.putExtra(FetchPlaceIntentService.Constants.FOURSQUARE_SECRET, foursquareSecret);
+                getContext().startService(intent);
+            }
+            else {
+                contentResolver.update(
+                        PubContract.WhatIsHot.CONTENT_URI,
+                        mNewValues,
+                        condition,
+                        null
+                );
+            }
+        }
+    }
+
+    private long getPubHistoricCheckins(DataSnapshot dataSnapshot, String address) {
+        DataSnapshot pubs =dataSnapshot.child("pubs");
+        long pubCheckins = 0;
+        final DataSnapshot pub = pubs.child(address.replace("\n", ""));
+        if(pub != null){
+            pubCheckins = pub.getChildrenCount();
+        }
+        return pubCheckins;
     }
 
     /**
