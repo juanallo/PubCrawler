@@ -14,6 +14,7 @@ public class FirebaseContract {
     public static final String LATITUDE = "latitude";
     public static final String LAST_LOCATION = "lastLocation";
     public static final String URL_SEPARATOR = "/";
+    public static final String CHECK_IN_TIMESTAMP = "checkInTimeStamp";
 
     public static String getPubUrl(Resources resources, String currentAddress){
        return getBaseUrl(resources) + URL_SEPARATOR + PUBS + URL_SEPARATOR + currentAddress.replace("\n", "");

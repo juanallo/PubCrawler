@@ -137,13 +137,23 @@ public class WhatIsHotActivity
         while (data.moveToNext())
         {
             final String address = data.getString(data.getColumnIndex(PubContract.WhatIsHot._ID));
-            final long actualCrawlers = data.getLong(data.getColumnIndex(PubContract.WhatIsHot.COLUMN_NOW));
-            if(!places.containsKey(address) && actualCrawlers > 0){
+            if(!places.containsKey(address)){
+                final long actualCrawlers = data.getLong(data.getColumnIndex(PubContract.WhatIsHot.COLUMN_NOW));
                 final double latitude = data.getDouble(data.getColumnIndex(PubContract.WhatIsHot.COLUMN_COORD_LAT));
                 final double longitude = data.getDouble(data.getColumnIndex(PubContract.WhatIsHot.COLUMN_COORD_LONG));
                 final LatLng position = new LatLng(latitude,longitude);
                 final String name = data.getString(data.getColumnIndex(PubContract.WhatIsHot.COLUMN_NAME));
-                final Marker marker = mMap.addMarker(new MarkerOptions().position(position).title(name).snippet(address));
+                final float alpha;
+                if(actualCrawlers > 0){
+                    alpha = 1;
+                }
+                else {
+                    alpha = 0.4f;
+                }
+                final Marker marker = mMap.addMarker(new MarkerOptions()
+                        .position(position)
+                        .title(name)
+                        .snippet(address).alpha(alpha));
                 places.put(address, marker);
             }
         }

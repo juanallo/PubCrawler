@@ -1,6 +1,7 @@
 package com.jalloro.android.pubcrawler.welcome;
 
 import android.content.ContentValues;
+import android.content.Context;
 import android.content.Intent;
 import android.content.res.Configuration;
 import android.database.Cursor;
@@ -22,6 +23,7 @@ import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.firebase.client.Firebase;
 import com.google.android.gms.common.ConnectionResult;
@@ -36,6 +38,7 @@ import com.jalloro.android.pubcrawler.detail.PubDetailActivity;
 import com.jalloro.android.pubcrawler.detail.PubDetailFragment;
 import com.jalloro.android.pubcrawler.helpers.GoogleConnectionApiClientListener;
 import com.jalloro.android.pubcrawler.helpers.PlayServicesHelper;
+import com.jalloro.android.pubcrawler.helpers.SessionHelper;
 import com.jalloro.android.pubcrawler.hot.WhatIsHotActivity;
 import com.jalloro.android.pubcrawler.model.Crawler;
 import com.jalloro.android.pubcrawler.model.SimplifiedLocation;
@@ -316,8 +319,8 @@ public class CheckInFragment extends Fragment
                 final double longitude = data.getDouble(data.getColumnIndex(PubContract.CrawlerLocation.COLUMN_COORD_LONG));
                 currentCrawler.setLastLocation(new SimplifiedLocation(latitude,longitude));
             }
-            //todo add timestamp.
-            if(lastLocation != null){
+            if(lastLocation != null &&
+                    getView() != null){
                 updateChecked(getView(), currentCrawler.isCheckedIn(lastLocation));
             }
 
@@ -349,10 +352,23 @@ public class CheckInFragment extends Fragment
 
         @Override
         public void onReceiveResult(int resultCode, Bundle resultData) {
-            currentAddress = resultData.getString(FetchAddressIntentService.Constants.RESULT_DATA_KEY);
+            final String resultDataInfo = resultData.getString(FetchAddressIntentService.Constants.RESULT_DATA_KEY);
             if (resultCode == FetchAddressIntentService.Constants.SUCCESS_RESULT && getView() != null) {
-                //todo check timeStamp
-                updateChecked(getView(),currentCrawler != null && currentAddress.equals(currentCrawler.getLastAddress()));
+                currentAddress = resultDataInfo;
+                final boolean checkedIn = currentCrawler != null
+                        && currentAddress.equals(currentCrawler.getLastAddress())
+                        && SessionHelper.isInSession(currentCrawler.getCheckInTimeStamp());
+                updateChecked(getView(), checkedIn);
+            }
+            else if(resultCode == FetchAddressIntentService.Constants.FAILURE_RESULT && getView() != null){
+
+                Context context = getActivity().getApplicationContext();
+                int duration = Toast.LENGTH_SHORT;
+
+                Toast toast = Toast.makeText(context, resultDataInfo, duration);
+                toast.show();
+
+                //TODO add an image showing nothing can be done!
             }
         }
     }

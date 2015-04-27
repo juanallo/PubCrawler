@@ -42,11 +42,15 @@ public class FetchAddressIntentService extends IntentService {
         List<Address> addresses = null;
 
         try {
-            addresses = geocoder.getFromLocation(
-                    location.getLatitude(),
-                    location.getLongitude(),
-                    // In this sample, get just a single address.
-                    1);
+            if(location != null){
+                addresses = geocoder.getFromLocation(
+                        location.getLatitude(),
+                        location.getLongitude(),
+                        1);
+            }
+            else {
+                errorMessage = getString(R.string.service_not_available);
+            }
         } catch (IOException ioException) {
             // Catch network or other I/O problems.
             errorMessage = getString(R.string.service_not_available);

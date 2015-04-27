@@ -25,6 +25,7 @@ import com.jalloro.android.pubcrawler.R;
 import com.jalloro.android.pubcrawler.data.FirebaseContract;
 import com.jalloro.android.pubcrawler.data.PubContract;
 import com.jalloro.android.pubcrawler.detail.FetchPlaceIntentService;
+import com.jalloro.android.pubcrawler.helpers.SessionHelper;
 import com.jalloro.android.pubcrawler.model.Place;
 import com.jalloro.android.pubcrawler.model.SimplifiedLocation;
 
@@ -83,11 +84,12 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
                     Map<String, Object> newPlace = (Map<String, Object>) pl.getValue();
                     final String address = newPlace.get(FirebaseContract.LAST_ADDRESS).toString();
 
+                    final Place place = getPlaceFromCrawler(places, newPlace, address);
+
                     //add historic info.
                     long pubCheckins = getPubHistoricCheckins(dataSnapshot, address);
+                    place.setHistoric(pubCheckins);
 
-                    //TODO check timeStamp
-                    getPlaceInformation(places, newPlace, address, pubCheckins);
                 }
                 updatePubsDb(places);
             }
@@ -99,21 +101,24 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
         });
     }
 
-    private void getPlaceInformation(Map<String, Place> places, Map<String, Object> newPlace, String address, long pubCheckins) {
+    private Place getPlaceFromCrawler(Map<String, Place> places, Map<String, Object> crawlerInfo, String address) {
+        final Place place;
         if(places.containsKey(address)){
-            final Place place = places.get(address);
-            place.addCrawler();
-            place.setHistoric(pubCheckins);
+            place = places.get(address);
         }
         else {
-            final Map<String, Object> lastLocation = (Map<String, Object>) newPlace.get(FirebaseContract.LAST_LOCATION);
+            final Map<String, Object> lastLocation = (Map<String, Object>) crawlerInfo.get(FirebaseContract.LAST_LOCATION);
             final double latitude = Double.parseDouble(lastLocation.get(FirebaseContract.LATITUDE).toString());
             final double longitude = Double.parseDouble(lastLocation.get(FirebaseContract.LONGITUDE).toString());
-            Place place = new Place(new SimplifiedLocation(latitude, longitude), address);
-            place.addCrawler();
-            place.setHistoric(pubCheckins);
+            place = new Place(new SimplifiedLocation(latitude, longitude), address);
             places.put(address, place);
         }
+        long checkinTimestamp = Long.parseLong(crawlerInfo.get(FirebaseContract.CHECK_IN_TIMESTAMP).toString());
+        //only add crawler to place if he is still there. Session not expired.
+        if(SessionHelper.isInSession(checkinTimestamp)){
+            place.addCrawler();
+        }
+        return place;
     }
 
     private void updatePubsDb(Map<String, Place> places) {
@@ -237,7 +242,7 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
         }
     }
 
-    public static final int SYNC_INTERVAL = 60;
+    public static final int SYNC_INTERVAL = 60 * 30 ;
     public static final int SYNC_FLEXTIME = SYNC_INTERVAL/3;
     public static final String LOG_CAT = SyncAdapter.class.getName();
 }
