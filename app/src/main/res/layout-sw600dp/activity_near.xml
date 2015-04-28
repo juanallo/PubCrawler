@@ -1,0 +1,24 @@
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:context="com.jalloro.android.pubcrawler.hot.WhatIsHotActivity"
+    android:orientation="horizontal"
+    android:animateLayoutChanges="true"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent" >
+
+    <fragment
+        android:id="@+id/map"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        class="com.google.android.gms.maps.SupportMapFragment" />
+
+    <FrameLayout
+        android:id="@+id/pub_detail"
+        android:layout_gravity="start"
+        android:background="@color/white"
+        android:layout_width="wrap_content"
+        android:layout_height="fill_parent"
+        android:visibility="gone"/>
+
+
+</FrameLayout>

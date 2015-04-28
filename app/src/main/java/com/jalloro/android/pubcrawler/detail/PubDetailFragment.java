@@ -38,6 +38,7 @@ import java.util.List;
 
 public class PubDetailFragment extends Fragment implements LoaderManager.LoaderCallbacks<Cursor> {
 
+    public static final String VERTICAL = "VERTICAL";
     private Place currentPlace;
     private PlaceResultReceiver placeReceiver;
     private SimplifiedLocation currentLocation;
@@ -53,13 +54,21 @@ public class PubDetailFragment extends Fragment implements LoaderManager.LoaderC
                              Bundle savedInstanceState) {
         View rootView = inflater.inflate(R.layout.fragment_pub_detail, container, false);
 
-        Intent intent = getActivity().getIntent();
+        Bundle intent = getActivity().getIntent().getExtras();
 
-        final String address = intent.getStringExtra(CheckInFragment.PUB_ADDRESS);
+        initUi(rootView, intent);
 
-        currentLocation = intent.getParcelableExtra(CURRENT_LOCATION);
+        return rootView;
+    }
 
-        final SimplifiedLocation pubLocation = intent.getParcelableExtra(PUB_LOCATION);
+    private void initUi(View rootView, Bundle intent) {
+        final String address = intent.getString(CheckInFragment.PUB_ADDRESS);
+
+        currentLocation = intent.getParcelable(CURRENT_LOCATION);
+
+        final SimplifiedLocation pubLocation = intent.getParcelable(PUB_LOCATION);
+
+        final boolean verticalOrientation = intent.getBoolean(PubDetailFragment.VERTICAL, false);
 
         currentPlace = new Place(pubLocation, address);
 
@@ -67,8 +76,8 @@ public class PubDetailFragment extends Fragment implements LoaderManager.LoaderC
 
         //change layout orientation based on phone orientation.
         final int phoneOrientation = getResources().getConfiguration().orientation;
-        if(phoneOrientation == Configuration.ORIENTATION_LANDSCAPE){
-            LinearLayout mainLayout = (LinearLayout) rootView.findViewById(R.id.main_pub_detail);
+        LinearLayout mainLayout = (LinearLayout) rootView.findViewById(R.id.main_pub_detail);
+        if(phoneOrientation == Configuration.ORIENTATION_LANDSCAPE && !verticalOrientation){
             mainLayout.setOrientation(LinearLayout.HORIZONTAL);
 
             LinearLayout header = (LinearLayout) rootView.findViewById(R.id.detail_header);
@@ -77,8 +86,9 @@ public class PubDetailFragment extends Fragment implements LoaderManager.LoaderC
             params.weight = 1.0f;
             header.setLayoutParams(params);
         }
-
-        return rootView;
+        else {
+            mainLayout.setOrientation(LinearLayout.VERTICAL);
+        }
     }
 
     @Override
@@ -209,6 +219,12 @@ public class PubDetailFragment extends Fragment implements LoaderManager.LoaderC
     public void onActivityCreated(Bundle savedInstanceState) {
         getLoaderManager().initLoader(PLACE_LOADER, null, this);
         super.onActivityCreated(savedInstanceState);
+    }
+
+    public void locationChanged(Bundle args) {
+
+        initUi(getView(),args);
+        getLoaderManager().restartLoader(PLACE_LOADER, null, this);
     }
 
     class PlaceResultReceiver extends ResultReceiver {
