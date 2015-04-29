@@ -22,4 +22,6 @@
     <string name="now">Now</string>
     <string name="historic">Historic</string>
     <string name="action_share">Share</string>
+    <string name="moon">Are you on the moon?</string>
+    <string name="place_not_found">Sorry, we could not find the place you are at!!</string>
 </resources>

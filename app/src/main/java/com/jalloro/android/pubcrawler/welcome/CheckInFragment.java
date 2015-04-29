@@ -178,9 +178,8 @@ public class CheckInFragment extends Fragment
             }
         }
         else {
-            //TODO add toast if root view is null
             if(rootView != null){
-                //TODO add toast indicating that the location is not there.
+                Log.e(LOG_CAT, "Could not get location from google play services");
                 disabledUi(rootView);
             }
         }
@@ -368,7 +367,9 @@ public class CheckInFragment extends Fragment
                 Toast toast = Toast.makeText(context, resultDataInfo, duration);
                 toast.show();
 
-                //TODO add an image showing nothing can be done!
+                final TextView viewDetails = (TextView)getView().findViewById(R.id.open_details);
+                viewDetails.setText(resultDataInfo);
+                viewDetails.setVisibility(View.VISIBLE);
             }
         }
     }

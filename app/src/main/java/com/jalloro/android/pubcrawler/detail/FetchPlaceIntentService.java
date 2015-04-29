@@ -9,6 +9,7 @@ import android.os.Bundle;
 import android.os.ResultReceiver;
 import android.util.Log;
 
+import com.jalloro.android.pubcrawler.R;
 import com.jalloro.android.pubcrawler.data.PubContract;
 import com.jalloro.android.pubcrawler.helpers.PlayServicesHelper;
 import com.jalloro.android.pubcrawler.model.AddressInfo;
@@ -57,7 +58,7 @@ public class FetchPlaceIntentService extends IntentService {
             AddressInfo addressInfo = findNearestPlace(addresses, location, address);
             saveAndDeliver(Constants.SUCCESS_RESULT, addressInfo, address);
         } catch (JSONException | FailToRetrievePlaceException e) {
-            AddressInfo addressInfo = new AddressInfo(address,"Are you on the moon?", PriceRange.UNKNOWN, location);
+            AddressInfo addressInfo = new AddressInfo(address, getString(R.string.moon), PriceRange.UNKNOWN, location);
            deliverResultToReceiver(Constants.FAILURE_RESULT,addressInfo);
         }
     }

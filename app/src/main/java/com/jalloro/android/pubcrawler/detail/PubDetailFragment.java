@@ -1,5 +1,6 @@
 package com.jalloro.android.pubcrawler.detail;
 
+import android.content.Context;
 import android.content.Intent;
 import android.content.res.Configuration;
 import android.database.Cursor;
@@ -22,6 +23,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.jalloro.android.pubcrawler.R;
 import com.jalloro.android.pubcrawler.chart.Bar;
@@ -237,8 +239,18 @@ public class PubDetailFragment extends Fragment implements LoaderManager.LoaderC
 
             AddressInfo addressInfo = resultData.getParcelable(FetchPlaceIntentService.Constants.RESULT_DATA_KEY);
             if (resultCode == FetchPlaceIntentService.Constants.FAILURE_RESULT) {
-                //TODO update UI with moon details!
-                // updateUi(getView(), addressInfo);
+                Place place = new Place(addressInfo.getLocation(),addressInfo.getAddress());
+                place.setName(addressInfo.getName());
+                place.setPriceRange(addressInfo.getPriceRange());
+                place.setNow(1);
+                //On all the apollo missions only 12 guys walked on the moon.
+                place.setHistoric(12 + 1);
+                updateUi(getView(), place);
+                Context context = getActivity().getApplicationContext();
+                int duration = Toast.LENGTH_SHORT;
+
+                Toast toast = Toast.makeText(context, getString(R.string.place_not_found), duration);
+                toast.show();
             }
         }
     }
