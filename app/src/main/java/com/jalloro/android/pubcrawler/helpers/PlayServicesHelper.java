@@ -158,6 +158,7 @@ public class PlayServicesHelper {
         return distance(from.getLatitude(), from.getLongitude(), to.getLatitude(), to.getLongitude());
     }
 
+    //code from http://stackoverflow.com/questions/18170131/comparing-two-locations-using-their-longitude-and-latitude
     private static double distance(final double fromLatitude, final double fromLongitude, final double toLatitude, final double toLongitude){
         double earthRadius = 3958.75; // in miles, change to 6371 for kilometer output
 
